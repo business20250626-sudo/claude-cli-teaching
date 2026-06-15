@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 3 · CLAUDE.md — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link active" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 3</span>
+  CLAUDE.md — 每次自動載入的專案常駐指示
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 8 分鐘讀完,加上小練習共 20 分鐘</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p>CLAUDE.md 是一份<strong>由你掌控</strong>的純文字檔(內容你說了算——自己打,或用 <code>/init</code>、叫 Claude 幫你產都行),每次 session 開頭<strong>完整載入</strong>,放你的持久指示 —— build 指令、程式慣例、架構規則,分<strong>組織 / 使用者 / 專案 / 本機</strong>四層。</p>
+</div>
+
+<h2>為什麼需要它:每次對話都是新的</h2>
+
+<p>Claude Code 每次啟動都是<strong>全新的上下文視窗</strong>。它在同一次對話裡記得脈絡,但你關掉再開,先前講過的事就忘了。於是你會一直重複:</p>
+
+<ul>
+  <li>「這個專案用 <code>pnpm test</code> 跑測試,不是 npm」</li>
+  <li>「API handler 放在 <code>src/api/handlers/</code>」</li>
+  <li>「commit 用 Conventional Commits,先 add 再 commit」</li>
+  <li>「動 <code>infra/</code> 之前一定要先問我」</li>
+</ul>
+
+<p><strong>CLAUDE.md 就是解法</strong>:寫一次,之後每次對話 Claude 都已經知道。</p>
+
+<h2>放哪裡:四個層級,由廣到窄</h2>
+
+<p>Claude Code 會從你啟動的目錄一路往上找 CLAUDE.md,把找到的<strong>全部疊在一起</strong>送進 context。順序是從最外層往你的工作目錄,所以<strong>越貼近專案的排在越後面</strong>。</p>
+
+<table>
+  <tr>
+    <th>層級</th>
+    <th>位置</th>
+    <th>適合放什麼</th>
+  </tr>
+  <tr>
+    <td>企業政策<br>(IT 部署)</td>
+    <td>macOS: <code>/Library/Application Support/ClaudeCode/CLAUDE.md</code></td>
+    <td>全公司的安全 / 合規守則,個人無法覆寫</td>
+  </tr>
+  <tr>
+    <td>個人全域</td>
+    <td><code>~/.claude/CLAUDE.md</code></td>
+    <td>跨所有專案的個人偏好:語言、commit 風格、慣用工具</td>
+  </tr>
+  <tr>
+    <td>專案<br>(隨 git 共享)</td>
+    <td><code>./CLAUDE.md</code> 或 <code>./.claude/CLAUDE.md</code></td>
+    <td>團隊共用:build/test 指令、架構、命名慣例、工作流程</td>
+  </tr>
+  <tr>
+    <td>本機私人</td>
+    <td><code>./CLAUDE.local.md</code>(記得加進 .gitignore)</td>
+    <td>只屬於你的:本機 sandbox URL、偏好的測試資料</td>
+  </tr>
+</table>
+
+<p>多個層級可以同時存在,Claude 會<strong>全部讀進去</strong>。但要注意:<strong>排在後面不代表一定優先</strong> —— 它們都只是 context,<strong>萬一兩層互相矛盾,Claude 可能隨便挑一條</strong>。所以重點不是排序,而是<strong>別讓它們打架</strong>,定期回去清掉衝突或過時的條目。</p>
+
+<h2>怎麼寫才有效</h2>
+
+<p>CLAUDE.md 每次都會佔上下文額度,而且它是<strong>「參考」而非強制規則</strong>。寫法直接影響 Claude 遵守的程度。三個原則:</p>
+
+<ul>
+  <li><strong>夠具體、可驗證</strong>:「用 2 格縮排」勝過「程式碼要排版整齊」;「commit 前跑 <code>pnpm test</code>」勝過「記得測試」</li>
+  <li><strong>有結構</strong>:用 Markdown 標題和條列分組,Claude 跟人一樣比較好掃</li>
+  <li><strong>不要太肥</strong>:目標 200 行以內。越長越難遵守。一次性的別寫,只寫每次都受用的</li>
+</ul>
+
+<p>一份適合<strong>專案根目錄</strong>的 <code>CLAUDE.md</code> 起手式:</p>
+
+<pre><code># 專案概述
+## 1. 動手前先想
+- 講出你的假設;不確定就問。
+- 有多種解讀就攤開來,別默默選一個。
+- 有更簡單的做法就說,該擋就擋。
+
+## 2. 簡單優先
+- 只做被要求的,不要多做、不要臆測需求。
+- 單次使用的程式碼別硬加抽象層或「可設定性」。
+- 50 行能寫完就別寫 200 行。
+
+## 3. 精準修改
+- 只動非改不可的;不要順手美化隔壁的程式、註解、排版。
+- 沒壞的不要重構;配合既有風格,即使你會用別的寫法。
+- 清掉「你的改動」造成的孤兒(沒用到的 import / 變數);既有死碼除非被要求別刪。
+
+## 4. 目標導向
+- 把任務變成可驗證的目標:
+  - 「加驗證」→ 先寫不合法輸入的測試,再讓它通過
+  - 「修 bug」→ 先寫能重現的測試,再讓它過
+- 多步驟任務先講一個簡短計畫,每步附上「怎麼驗證」。
+
+## 5. 溝通偏好
+- 用台灣繁體中文回我,技術名詞保留原文;回答簡潔
+- 不確定就說不確定,不要編造
+- 重大或不可逆的動作(刪檔、force push、改 CI)先列計畫,等我點頭再做
+
+## 6. 安全
+- 不要把密鑰 / token 寫進程式碼、commit message 或 log
+- 不確定能不能對外送的資料,先問我
+
+## 7. Git / 專案管理規範
+- 在適當情況下使用清楚的 commit 訊息
+- 避免在同一次修改中混合不相關的變更
+- 未經明確要求，不要自動對整個專案進行格式化
+
+</code></pre>
+
+<div class="box box-warning">
+  <div class="box-title">⚠️ CLAUDE.md 是「軟性」指引,不是防護欄</div>
+  <p>CLAUDE.md 的內容是當作上下文餵給 Claude,<strong>不保證 100% 遵守</strong>,尤其指令模糊或互相矛盾時。如果某件事「一定要在某個時間點執行」(例如每次 commit 前),用 <a href="https://code.claude.com/docs/en/hooks-guide" target="_blank">Hook</a> 來強制,而不是寫在 CLAUDE.md。</p>
+</div>
+
+<h2>三個一定要會的工具</h2>
+
+<table>
+  <tr>
+    <th>指令 / 語法</th>
+    <th>做什麼</th>
+  </tr>
+  <tr>
+    <td><code>/init</code></td>
+    <td>讓 Claude 掃過你的 codebase,自動生成一份起手 CLAUDE.md(build 指令、測試方式、慣例)。已有檔案時會建議改進而非覆蓋。</td>
+  </tr>
+  <tr>
+    <td><code>/memory</code></td>
+    <td>列出目前這次對話載入了哪些 CLAUDE.md / rules 檔,點開就能編輯。Debug「Claude 怎麼沒照做」時第一步。</td>
+  </tr>
+  <tr>
+    <td><code>@path/to/file</code></td>
+    <td>在 CLAUDE.md 裡 import 別的檔,例如 <code>git 規範 @docs/git.md</code>。被引入的檔一樣會在啟動時載入。</td>
+  </tr>
+</table>
+
+<div class="box box-concept">
+  <div class="box-title">💡 別跟 auto memory(自動記憶)搞混</div>
+  <p><strong>CLAUDE.md 由你決定內容</strong>(就算請 Claude 用 <code>/init</code> 幫你產,也是你審、你 commit、放進你的 repo);<strong>auto memory 是 Claude 自己</strong>判斷該記什麼、不用你開口 —— 它從你的修正裡發現並記下你的習慣(build 指令、debug 心得)。差別在<strong>誰主導</strong>。</p>
+  <p>還有一個差異:auto memory 只載入 <code>MEMORY.md</code> 的<strong>前 200 行 / 25KB</strong>;CLAUDE.md 則是<strong>完整載入</strong>。</p>
+</div>
+
+<hr>
+
+<div class="box box-exercise">
+  <div class="box-title">🛠 小練習:幫一個真實 repo 建 CLAUDE.md</div>
+  <p>感受「Claude 永遠記得這個專案怎麼跑」的差別。</p>
+
+  <h4>步驟</h4>
+  <ol>
+    <li>在你某個專案資料夾開 Claude Code,輸入:</li>
+  </ol>
+
+  <div class="prompt">
+    <p>/init</p>
+  </div>
+
+  <p>Claude 會掃描專案、生成一份 CLAUDE.md 草稿。</p>
+
+  <ol start="2">
+    <li>打開生成的 <code>CLAUDE.md</code>,補一條 <strong>它不可能自己猜到</strong>的規則,例如:</li>
+  </ol>
+
+  <div class="prompt">
+    <p>每個回覆一開始都跟我說一聲尊貴的主人您回來啦～</p>
+  </div>
+
+  <ol start="3">
+    <li><strong>關掉對話、開新對話</strong>,隨便問個問題看看claude是否有<strong>主動引用</strong>你寫的指令。</li>
+  </ol>
+
+  <ol start="4">
+    <li>輸入:</li>
+  </ol>
+
+  <div class="prompt">
+    <p>/memory</p>
+  </div>
+  <p>可以查看當前載入了哪些 CLAUDE.md</p>
+
+  <h4>練習目的</h4>
+  <ul>
+    <li>體驗 <code>/init</code> 怎麼自動產生起手式</li>
+    <li>看出 CLAUDE.md 怎麼影響「下一次」對話的行為</li>
+    <li>明白以後不用每次重新交代專案怎麼跑</li>
+  </ul>
+</div>
+
+<div class="box box-check">
+  <div class="box-title">✅ 走完 Chapter 3 你要能...</div>
+  <ul>
+    <li>說出 CLAUDE.md 是什麼(每次自動載入的常駐指示,不是模型在「記憶」)</li>
+    <li>知道四個放置層級,以及專案級 vs 個人全域的差別</li>
+    <li>寫出具體、可驗證、不臃腫的指令</li>
+    <li>會用 <code>/init</code> 生成、用 <code>/memory</code> 檢查載入狀況</li>
+    <li>知道 CLAUDE.md 是軟性指引,強制行為要用 Hook</li>
+  </ul>
+</div>
+
+<div class="page-nav">
+  <a href="02-安裝設定.html">
+    <span class="label">← 上一章</span>
+    <span class="title">Chapter 2 · 安裝設定</span>
+  </a>
+  <a href="04-hook.html" class="next">
+    <span class="label">下一章 →</span>
+    <span class="title">Chapter 4 · Hook</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

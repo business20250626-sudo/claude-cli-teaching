@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 8 · Subagent — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link active" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 8</span>
+  Subagent — 委派出去的專門角色
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 9 分鐘讀完,加上小練習共 20 分鐘</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p>Subagent 是把一個<strong>專門角色</strong>(含它的工具權限與行為設定)封裝起來,主任務在合適時(通常自動)<strong>委派</strong>給它,讓它在<strong>獨立的上下文</strong>裡完成工作後<strong>只回報結果</strong>。好處是脈絡隔離、可平行、配置專門化。</p>
+</div>
+
+<h2>為什麼需要它:主對話會被「過程」塞爆</h2>
+
+<p>想像你叫 Claude「找出這個 codebase 哪裡處理付款」。它會讀一堆檔、grep 一堆關鍵字、印出大量結果 — 這些<strong>過程</strong>全部堆進你的主對話 context。等它找到答案,你其實只想要那一句結論,但前面那堆搜尋雜訊已經佔滿了視窗,還會稀釋後面的對話。</p>
+
+<p><strong>Subagent 就是解法</strong>:把這種「會產生一堆你之後不會再看的輸出」的工作,丟給一個<strong>有自己獨立 context 視窗</strong>的子代理去做。它在自己的視窗裡讀檔、搜尋、翻找,做完<strong>只把結論回報</strong>給主線 — 過程的雜訊留在它那邊,不污染你的主對話。</p>
+
+<h2>兩個核心優勢</h2>
+
+<h3>1. 固定了「角色、行為與工具權限」</h3>
+
+<p>一個 subagent 不只是「另一個 Claude」,而是一個<strong>被你定義好的角色</strong>:你給它專屬的 system prompt(它是誰、該怎麼做事)、指定它<strong>只能用哪些工具</strong>、用哪個模型。</p>
+
+<p>工具權限這點特別有用 — 例如一個「code reviewer」只該<strong>讀</strong>不該<strong>改</strong>,你就只給它 <code>Read</code> / <code>Grep</code>,不給 <code>Edit</code>。這樣就算它判斷錯誤想動手,也<strong>動不了</strong>,因為它手上根本沒有那個工具。這是比「拜託它別改」更硬的保證。</p>
+
+<h3>2. 節省上下文(但有代價)</h3>
+
+<p>subagent <strong>只回傳結果</strong>,中間過程不會回流到主 session 干擾你。這就是省 context 的關鍵。</p>
+
+<div class="box box-warning">
+  <div class="box-title">⚠️ 代價:彼此看不到脈絡</div>
+  <p>隔離是雙面刃。<strong>子代理跟主線之間、子代理彼此之間,都看不到對方的脈絡</strong> — 子代理開工時是一張白紙,只拿到主線交付的那段任務描述,完成後也只吐回一段結論。</p>
+  <p>所以:任何需要<strong>子任務互相參照、傳遞中間結果、來回討論</strong>的工作,用 subagent 就<strong>不太適合</strong>。那種工作留在主對話做,或改用 skill(在主線 context 裡跑)。</p>
+</div>
+
+
+<h2>怎麼建自訂 subagent</h2>
+
+<p>跟 skill 一樣是「資料夾 + Markdown 檔」的概念,但 subagent 放在 <code>.claude/agents/</code>,一個 agent 就是一個 <code>.md</code> 檔:frontmatter 設定 + 內文(就是它的 system prompt)。官方範例:</p>
+
+<pre><code>---
+name: code-reviewer
+description: Reviews code for quality and best practices
+tools: Read, Glob, Grep
+model: sonnet
+---
+
+You are a code reviewer. When invoked, analyze the code and provide
+specific, actionable feedback on quality, security, and best practices.</code></pre>
+
+<table>
+  <tr><th>frontmatter</th><th>作用</th></tr>
+  <tr><td><code>name</code></td><td>(必填)agent 識別名,小寫加連字號</td></tr>
+  <tr><td><code>description</code></td><td>(必填)講「這在幹嘛、何時該派它」— Claude 靠它判斷要不要委派,寫得好才會在對的時機被叫</td></tr>
+  <tr><td><code>tools</code></td><td>(選填)限定它只能用哪些工具;不寫就繼承主對話的全部</td></tr>
+  <tr><td><code>model</code></td><td>(選填)指定模型 — 簡單任務可以派便宜的 Haiku 省錢</td></tr>
+</table>
+
+<p>不用手寫也行:打 <code>/agents</code> 開互動介面建立(而且<strong>立刻生效</strong>;手動改檔案則要重開 session)。</p>
+
+<div class="box box-concept">
+  <div class="box-title">🔗 跟 Skill 怎麼選?</div>
+  <p>兩個都能封裝「可重複使用的角色 / 流程」,差別在<strong>跑在哪個 context</strong>:<strong>skill 在主對話裡跑</strong>(看得到你的完整脈絡,適合要來回討論的工作);<strong>subagent 在隔離的 context 裡跑</strong>(看不到主線脈絡,適合會產生一堆雜訊、只要結論的自包含任務)。需要頻繁來回、共享脈絡 → 主對話或 skill;會洗版、只要結果 → subagent。</p>
+</div>
+
+<hr>
+
+<div class="box box-exercise">
+  <div class="box-title">🛠 小練習:建一個唯讀的 code-reviewer,看「工具權限」真的把它鎖住</div>
+
+  <h4>步驟</h4>
+  <ol>
+    <li>打 <code>/agents</code>,建一個新的專案 subagent(或直接手寫 <code>.claude/agents/code-reviewer.md</code>):</li>
+    <pre><code>---
+name: code-reviewer
+description: 審查程式碼品質與最佳實踐,只讀不改
+tools: Read, Glob, Grep
+model: sonnet
+---
+
+你是程式碼審查者。被叫用時,分析程式碼,針對品質、
+安全性、最佳實踐給出具體、可執行的建議。不要修改任何檔案。</code></pre>
+
+    <li>將cmd/slot-verify/main.go的第16行func故意刪掉c,然後<strong>點名</strong>它來看:</li>
+    <pre><code>用 code-reviewer subagent 看一下main.go</code></pre>
+
+    <li>觀察:它會在<strong>自己的 context</strong> 裡讀檔、分析,回報一段審查意見 — 注意主對話<strong>沒有</strong>被一堆讀檔過程洗版,只多了那段結論。</li>
+
+    <li><strong>(權限驗證)</strong>接著叫它<strong>動手改</strong>:「順便幫我把那個問題修掉」。因為它的 <code>tools</code> 只有 <code>Read, Glob, Grep</code>、<strong>沒有 <code>Edit</code></strong>,它改不了 — 你會看到它要嘛說自己沒有修改工具、要嘛把修改建議丟回給主線由主 Claude 處理。這就是「工具權限」比口頭約束更硬的地方。</li>
+    <pre><code> 用 code-reviewer subagent 幫我修復main.go的bug</code></pre>
+
+  </ol>
+
+  <h4>練習目的</h4>
+  <ul>
+    <li>走一次完整流程:建 agent → 點名委派 → 拿回結論</li>
+    <li>親眼看到<strong>脈絡隔離</strong>:審查的讀檔過程沒進主對話</li>
+    <li>驗證<strong>工具權限</strong>:不給 <code>Edit</code>,它就真的改不了,而不是「拜託它別改」</li>
+  </ul>
+</div>
+
+<div class="box box-check">
+  <div class="box-title">✅ 走完 Chapter 8 你要能...</div>
+  <ul>
+    <li>說出 subagent 是什麼:封裝一個專門角色,在獨立 context 完成工作後只回報結果</li>
+    <li>講出兩個優勢:固定角色 / 行為 / 工具權限,以及省 context(過程不回流主線)</li>
+    <li>講出它的代價:彼此看不到脈絡,需要來回參照的工作不適合用它</li>
+    <li>分得出 subagent 和 skill:一個在隔離 context、一個在主對話 context</li>
+  </ul>
+</div>
+
+<div class="page-nav">
+  <a href="07-mcp.html">
+    <span class="label">← 上一章</span>
+    <span class="title">Chapter 7 · MCP servers</span>
+  </a>
+  <a href="09-permission-modes.html" class="next">
+    <span class="label">下一章 →</span>
+    <span class="title">Chapter 9 · 權限模式</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

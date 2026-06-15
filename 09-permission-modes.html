@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 9 · 權限模式 — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link active" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 9</span>
+  權限模式 — 「問你」與「放手」之間的旋鈕
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 9 分鐘讀完,加上小練習共 20 分鐘</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p>Claude 每次想<strong>改檔、跑指令、發網路請求</strong>都會停下來問你。<strong>權限模式</strong>就是控制「這個停頓多常發生」的旋鈕 — 從「每件事都問我」到「放手讓它做」,你按 <code>Shift+Tab</code> 切換。敏感工作用緊一點的、信任方向時用鬆一點的。</p>
+</div>
+
+<h2>為什麼需要它:在「煩」和「險」之間取捨</h2>
+
+<p>兩種極端都不好用:每個動作都要你批准 → <strong>煩</strong>,做一個小功能按二十次 Enter;什麼都不問直接做 → <strong>險</strong>,它改錯方向或被 prompt injection 帶壞你也來不及攔。</p>
+
+<p>權限模式讓你<strong>依當下的工作性質調這個旋鈕</strong>:在不熟的正式環境調緊、自己掌控每一步;在你會事後 review 的迭代階段調鬆、讓它連續做久一點再回報。一共六種模式,但它們分成兩群 —— <strong>日常四種</strong>(按 <code>Shift+Tab</code> 切)和<strong>特殊兩種</strong>(要用旗標才叫得出來)。</p>
+
+<h2>日常四模式:<code>Shift+Tab</code> 循環切換</h2>
+
+<p>這四種是你天天在用的。在 session 裡按 <code>Shift+Tab</code> 就會循環切,目前模式顯示在狀態列。由緊到鬆:</p>
+
+<table>
+  <tr><th>模式</th><th>不用問就能做的事</th><th>什麼時候用</th></tr>
+  <tr>
+    <td><strong><code>default</code></strong><br><span style="color:#7F8C8D;">(預設)</span></td>
+    <td>只有<strong>讀取</strong></td>
+    <td>起步、碰敏感東西 — 每個改動都要你點頭</td>
+  </tr>
+  <tr>
+    <td><strong><code>plan</code></strong><br><span style="color:#7F8C8D;">(計畫模式)</span></td>
+    <td>只有<strong>讀取</strong>,而且<strong>連改都不准</strong></td>
+    <td>動手前先探索、提計畫對齊方向(見下方)</td>
+  </tr>
+  <tr>
+    <td><strong><code>acceptEdits</code></strong><br><span style="color:#7F8C8D;">(自動接受編輯)</span></td>
+    <td>讀 + <strong>改檔</strong> + 常見檔案指令(mkdir / touch / mv / cp 等)</td>
+    <td>你會事後用 <code>git diff</code> 一次看完,不想逐個批准</td>
+  </tr>
+  <tr>
+    <td><strong><code>auto</code></strong><br><span style="color:#7F8C8D;">(自動模式)</span></td>
+    <td><strong>幾乎全部</strong>,但有分類器在背景把關</td>
+    <td>長任務、減少打斷,但你信任大方向</td>
+  </tr>
+</table>
+
+<div class="box box-concept">
+  <div class="box-title">📐 plan mode 的重點不是「省去問你」,是「動手前先對齊」</div>
+  <p>plan mode 跟 default 一樣只能讀,但它<strong>連改都禁止</strong> — 只能研究你的 codebase、然後產出一份計畫給你看。等你<strong>核准計畫</strong>,它會切到你選的模式(auto / acceptEdits / 逐個確認)才開始改。這是非平凡改動的核心習慣:<strong>先看它打算怎麼做、確認方向對了,再放它動手</strong>,避免「悶頭改一堆、改錯難收拾」。隨手用:任一句話前面加 <code>/plan</code>,或按 <code>Shift+Tab</code> 切進去。</p>
+</div>
+
+<div class="box box-warning">
+  <div class="box-title">⚠️ auto 模式:減少 prompt ≠ 保證安全</div>
+  <p>auto 模式幾乎什麼都不問你,但背後有個<strong>獨立的分類器模型</strong>逐個動作把關:偵測到「超出你要求的事」「碰到不認識的基礎設施」「像被惡意內容帶風向」就擋下(預設擋 <code>curl|bash</code>、正式環境部署、force push、推 main 等)。但官方明講它是<strong>研究預覽</strong>,「減少 prompt 不代表保證安全」,而且有方案 / 模型 / 版本門檻 —— 帳號不達標時 <code>Shift+Tab</code> 根本不會出現它。</p>
+</div>
+
+<h2>特殊兩模式:要用旗標才叫得出來</h2>
+
+<p>這兩種<strong>故意不放進 <code>Shift+Tab</code> 循環</strong>,因為它們不是「隨手切換」的東西 — 一個給無人環境、一個有風險,都得在啟動時明確指定:</p>
+
+<table>
+  <tr><th>模式</th><th>行為</th><th>怎麼啟用</th><th>用在哪</th></tr>
+  <tr>
+    <td><strong><code>dontAsk</code></strong></td>
+    <td>凡是會跳出來問的<strong>一律自動拒絕</strong>,只跑你預先 allow 的工具</td>
+    <td><code>claude --permission-mode dontAsk</code><br>(永遠不在循環裡)</td>
+    <td>要 LLM 的幫助,又要固定它的工具</td>
+  </tr>
+  <tr>
+    <td><strong><code>bypassPermissions</code></strong></td>
+    <td><strong>所有檢查全關</strong>,工具直接執行</td>
+    <td><code>claude --dangerously-skip-permissions</code><br>(要重啟才出現在循環)</td>
+    <td><strong>只能</strong>用在隔離的容器 / VM</td>
+  </tr>
+</table>
+
+<div class="box box-concept">
+  <div class="box-title">🤔 兩個特殊模式,被踢出循環的理由剛好相反</div>
+  <p><strong>bypassPermissions 是太危險</strong>(怕你手滑切到零檢查);<strong>dontAsk 是太死板、非互動</strong> —— 切過去後,沒預先 allow 的動作它<strong>默默拒絕、不問你</strong>,你會一臉問號「怎麼叫它幹嘛都不動」。它是為「無人值守」設計的,放進日常隨手切的循環只會害人誤觸。所以兩個都要明確下旗標,不放進 <code>Shift+Tab</code>。</p>
+</div>
+
+<div class="box box-warning">
+  <div class="box-title">🚨 bypassPermissions:對 prompt injection 毫無防護</div>
+  <p>官方原話:這個模式「對 prompt injection 和意外操作<strong>毫無防護</strong>」。一般 session 切不進去,必須用危險旗標重啟;在 root / sudo 下還會直接拒絕啟動。除非你在「就算它搞砸也傷不到主機」的隔離容器裡,否則別用 —— 想要「少問又安全」,用 auto 模式,不是這個。</p>
+</div>
+
+<h2>怎麼切換</h2>
+
+<pre><code># session 中:循環切日常模式
+Shift+Tab          # default → acceptEdits → plan(達標的話再加 auto)
+
+# 啟動時指定
+claude --permission-mode plan
+
+# 設成專案 / 個人預設(settings.json)
+{
+  "permissions": { "defaultMode": "acceptEdits" }
+}</code></pre>
+
+<h2>模式、規則、hook:三層怎麼疊起來</h2>
+
+<p>這章的權限模式,跟你前面學過的 <code>/permissions</code>和 hook不是三選一,而是<strong>三個層次疊在一起</strong>:</p>
+
+<table>
+  <tr><th>層次</th><th>管什麼</th><th>本質</th></tr>
+  <tr>
+    <td><strong>權限模式</strong>(本章)</td>
+    <td>整體<strong>底線</strong> — 這個 session 大致上多常問你</td>
+    <td>一個旋鈕,<code>Shift+Tab</code> 切</td>
+  </tr>
+  <tr>
+    <td><strong><code>/permissions</code> 規則</strong></td>
+    <td>個別工具<strong>放行 / 問 / 擋</strong>,疊在模式之上</td>
+    <td>內建的 allow / ask / deny 規則</td>
+  </tr>
+  <tr>
+    <td><strong>hook</strong></td>
+    <td>用<strong>程式邏輯</strong>做「符合某條件才攔」的客製判斷</td>
+    <td>你寫的程式,綁在事件點</td>
+  </tr>
+</table>
+
+<p>官方原話:<strong>模式設底線(set the baseline),規則疊在上面。</strong>而且 <code>deny</code> 規則和明確的 <code>ask</code> 規則<strong>在每個模式都生效</strong> —— 連 <code>bypassPermissions</code> 也擋得住。所以即使開了很鬆的模式,你仍能用一條 deny 規則保住絕對不能碰的東西。</p>
+
+<h3>怎麼分辨「這件事該用哪一層」</h3>
+
+<p>三層最容易混。用這三個問題對號入座:</p>
+
+<table>
+  <tr><th>你的需求長這樣</th><th>用哪一層</th><th>為什麼</th></tr>
+  <tr>
+    <td>「<strong>這一整段工作</strong>我想少被打斷 / 想先看計畫」<br><span style="color:#7F8C8D;">例:這次重構讓它連續做、做完我再看</span></td>
+    <td><strong>權限模式</strong></td>
+    <td>模式是<strong>整個 session 的氛圍</strong>,隨手 <code>Shift+Tab</code> 調,不針對特定工具</td>
+  </tr>
+  <tr>
+    <td>「<strong>某類動作</strong>固定要放行 / 固定要問 / 絕對禁止」<br><span style="color:#7F8C8D;">例:npm test 別再問了、git push 一定要問、永遠不准碰 .env</span></td>
+    <td><strong><code>/permissions</code> 規則</strong></td>
+    <td>規則是<strong>常駐的、針對工具+參數</strong>的白/灰/黑名單,設一次長期有效</td>
+  </tr>
+  <tr>
+    <td>「要<strong>看情況、帶條件判斷</strong>才能決定擋不擋」<br><span style="color:#7F8C8D;">例:只有 push 到 main 才擋、改到某些檔要先跑檢查</span></td>
+    <td><strong>hook</strong></td>
+    <td>規則只會比對字串,<strong>表達不出條件邏輯</strong>;hook 是你寫的程式,想多聰明都行</td>
+  </tr>
+</table>
+
+<p>一句話:<strong>調整體氛圍 → 模式;某類動作一律怎樣 → 規則;要看情況判斷 → hook。</strong></p>
+
+<h3>細看中間這層:<code>/permissions</code> 規則</h3>
+
+<p>前面幾章一直提到它,這裡正式講清楚。打 <code>/permissions</code> 開互動介面,或直接寫進 <code>settings.json</code>。規則分三種:</p>
+
+<ul>
+  <li><strong>allow</strong>:符合的工具呼叫<strong>直接放行</strong>,不問你</li>
+  <li><strong>ask</strong>:符合的<strong>每次都跳出來問</strong>你</li>
+  <li><strong>deny</strong>:符合的<strong>直接擋掉</strong>,Claude 連試都不能試</li>
+</ul>
+
+<h4>評估順序:deny → ask → allow(先中先贏)</h4>
+
+<p>官方原話:<em>"Rules are evaluated in order: deny, then ask, then allow."</em> 三種規則同時存在時,<strong>deny 最優先,其次 ask,最後 allow</strong>,而且<strong>規則細不細不影響順序</strong> —— 就算有一條更精確的 allow,只要也中了一條 ask,還是會問你。這個設計讓「擋」和「問」永遠蓋得過「放行」,安全性才守得住。</p>
+
+<h4>語法:<code>工具名</code> 或 <code>工具名(條件)</code></h4>
+
+<pre><code>{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",      // npm run 開頭的指令都放行
+      "Bash(git commit *)"
+    ],
+    "ask": [
+      "Bash(git push *)"      // push 一律先問我
+    ],
+    "deny": [
+      "Read(./.env)",         // 永遠不准讀 .env
+      "Bash(rm -rf *)"
+    ]
+  }
+}</code></pre>
+
+<ul>
+  <li><strong>不帶括號 = 整個工具</strong>:<code>Bash</code> 比對所有 Bash 指令、<code>Read</code> 比對所有讀檔。</li>
+  <li><strong>括號裡是條件</strong>,Bash 支援 <code>*</code> 萬用字元:<code>Bash(npm run *)</code> 比對 npm run 開頭的指令。注意<strong>空格很重要</strong> —— <code>Bash(ls *)</code> 配得到 <code>ls -la</code> 但配不到 <code>lsof</code>;<code>Bash(ls*)</code>(沒空格)兩個都配。</li>
+  <li><strong>檔案規則用 gitignore 風格路徑</strong>:<code>Read(./.env)</code> 當前目錄的 .env、<code>Edit(/src/**/*.ts)</code> 專案根的 src 底下、<code>Read(~/.zshrc)</code> 家目錄、<code>Read(//tmp/x)</code> 才是絕對路徑(<strong>兩條斜線</strong>)。</li>
+  <li><strong>網路 / MCP</strong>:<code>WebFetch(domain:example.com)</code>、<code>mcp__notion__*</code>(某 server 的全部工具,接 Ch7)。</li>
+</ul>
+
+<div class="box box-warning">
+  <div class="box-title">⚠️ 別用 Bash 規則「限制參數」來做安全控制</div>
+  <p>官方明確警告:想用 <code>Bash(curl http://github.com/ *)</code> 把 curl 限制在某網域<strong>很脆弱</strong> —— 換個寫法(<code>https</code>、選項放前面、用變數、多個空格、短網址轉址)就繞過去了。要擋網路請改用 <strong>deny 掉 curl/wget + 用 <code>WebFetch(domain:...)</code> 開白名單</strong>,或用 hook 驗證。規則適合「這個指令前綴放不放行」,不適合「這個指令的參數安不安全」。</p>
+</div>
+
+<h4>存哪、誰蓋過誰</h4>
+
+<p>規則寫在 settings.json,跟前幾章一樣分層,而且<strong>deny 不分層級一律最大</strong>:</p>
+
+<ul>
+  <li><code>.claude/settings.json</code>(專案共用,commit 進版控)、<code>.claude/settings.local.json</code>(個人、不進版控)、<code>~/.claude/settings.json</code>(你所有專案)</li>
+  <li>官方原話:<em>"If a tool is denied at any level, no other level can allow it."</em> —— <strong>任何一層 deny 掉,其他層都救不回來</strong>。所以團隊可以在專案 settings 放一條 <code>deny</code> 守住絕對紅線,個人設定鬆歸鬆都蓋不掉。</li>
+</ul>
+
+
+<hr>
+
+<div class="box box-exercise">
+  <div class="box-title">🛠 小練習:用同一個任務,感受三種模式的差別</div>
+
+  <h4>步驟</h4>
+  <ol>
+    <li>找個小改動需求(例如「幫遊戲頁面的某個文字改個顏色」)。先在 <strong>default 模式</strong>下叫 Claude 做,觀察:它每要改一個檔就<strong>停下來問你</strong>。</li>
+
+    <li>按 <code>Shift+Tab</code> 看狀態列循環變化,切到 <strong><code>plan</code> 模式</strong>,下同一個需求:它<strong>不會動手</strong>,只給你一份「我打算怎麼改」的計畫。看過、確認方向對了再核准 — 體會「先對齊再動手」。</li>
+
+    <li>再 <code>Shift+Tab</code> 切到 <strong><code>acceptEdits</code> 模式</strong>(狀態列顯示 <code>⏵⏵ accept edits on</code>),下需求:它<strong>直接改、不問你</strong>,你事後用 <code>/diff</code> 或 <code>git diff</code> 一次檢視。</li>
+
+    <li><strong>(加一條規則)</strong>打 <code>/permissions</code>,加一條 <code>ask</code> 規則 <code>Bash(git push *)</code>。然後不管你切到多鬆的模式(連 acceptEdits),叫它 push,它<strong>都會先問你</strong> —— 體會「規則疊在模式之上、ask 蓋過放行」。想更硬就改成 <code>deny</code>,它連試都不會試。</li>
+  </ol>
+
+  <h4>練習目的</h4>
+  <ul>
+    <li>親手用 <code>Shift+Tab</code> 切換,看狀態列怎麼變</li>
+    <li>感受三種模式的「問你頻率」差異:default 逐個問、plan 先給計畫、acceptEdits 直接做</li>
+    <li>用一條 <code>/permissions</code> 規則,看到「規則疊在模式上、deny/ask 蓋過放行」</li>
+  </ul>
+</div>
+
+<div class="box box-check">
+  <div class="box-title">✅ 走完 Chapter 9 你要能...</div>
+  <ul>
+    <li>說出權限模式是什麼:控制「Claude 多常停下來問你」的旋鈕</li>
+    <li>分得出日常四模式(default / plan / acceptEdits / auto,<code>Shift+Tab</code> 切)和特殊兩模式(dontAsk / bypassPermissions,旗標啟用)</li>
+    <li>講出 plan mode 的價值:動手前先提計畫對齊,不是省去問你</li>
+    <li>說出模式、<code>/permissions</code> 規則、hook 的三層關係:整體氛圍用模式、某類動作一律怎樣用規則、要看情況判斷用 hook</li>
+    <li>會寫 <code>/permissions</code> 的 allow / ask / deny 規則,知道評估順序是 deny → ask → allow、任何一層 deny 就救不回來</li>
+  </ul>
+</div>
+
+<div class="page-nav">
+  <a href="08-subagent.html">
+    <span class="label">← 上一章</span>
+    <span class="title">Chapter 8 · Subagent</span>
+  </a>
+  <a href="#" class="next" style="opacity:.5; pointer-events:none;">
+    <span class="label">下一章 →</span>
+    <span class="title">規劃中</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

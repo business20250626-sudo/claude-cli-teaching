@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 5 · Skill — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link active" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 5</span>
+  Skill — 按需載入的「能力包」
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 8 分鐘讀完,加上小練習共 20 分鐘</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p>Skill 是一包<strong>平常不佔 context、需要時才載入</strong>的指示與能力。跟前兩章對照:CLAUDE.md <strong>永遠在場</strong>(軟性建議)、Hook <strong>到點硬觸發</strong>、Skill 則是<strong>按需叫用</strong>——用得到才把它的完整內容拉進來。</p>
+</div>
+
+<h2>為什麼需要它:接續前面的脈絡</h2>
+
+<p>Chapter 3 說過,CLAUDE.md 的內容<strong>永遠塞在 context 裡</strong>。東西越加越多,context 就越肥、越貴、越容易失焦。但很多「能力」其實<strong>大部分時間用不到</strong>——例如「做 code review 的完整流程」「研究報告的產法」,只有偶爾才需要。</p>
+
+<p><strong>Skill 就是這個問題的解法</strong>:平常只放一行 <code>description</code> 讓 Claude 知道「有這個能力存在」,真正的詳細指示<strong>等到用得上時才載入</strong>。這種「先給目錄、要用才翻內文」的設計叫 <strong>progressive disclosure(漸進式揭露)</strong>,核心目的就是省 context。</p>
+
+<h2>Skill 是什麼:一個資料夾 + 一份 SKILL.md</h2>
+
+<p>一個 skill 最小就是一個資料夾,裡面放一份 <code>SKILL.md</code>:</p>
+
+<pre><code>my-skill/
+└── SKILL.md        ← frontmatter(name + description) + 內文指示
+   (可選)scripts/   ← 附帶的腳本、範本、資源</code></pre>
+
+<p><code>SKILL.md</code> 開頭是 frontmatter,只有兩個關鍵欄位:</p>
+
+<table>
+  <tr><th>欄位</th><th>作用</th><th>何時被讀</th></tr>
+  <tr><td><code>name</code></td><td>skill 的名字(也是 <code>/</code> 叫它的名字)</td><td>平常就載入(輕量清單)</td></tr>
+  <tr><td><code>description</code></td><td>一句話講「這在幹嘛、何時該用」</td><td>平常就載入,Claude 靠它判斷要不要用</td></tr>
+  <tr><td>內文(frontmatter 以下)</td><td>真正的詳細指示、步驟、規則</td><td><strong>被觸發時才載入</strong></td></tr>
+</table>
+
+<div class="box box-warning">
+  <div class="box-title">⚠️ description 是 skill 的命脈</div>
+  <p>因為 Claude 平常<strong>只看得到 <code>description</code></strong>,所以它寫得好不好,直接決定這個 skill 會不會在對的時機被自動叫出來。description 模糊 → skill 形同隱形。</p>
+</div>
+
+<h2>怎麼被觸發(兩種)</h2>
+
+<ol>
+  <li><strong>自動觸發</strong>:Claude 看你的任務,比對各 skill 的 <code>description</code>,自己判斷「這次用得上」就載入並執行。你不用做任何事。</li>
+  <li><strong>手動觸發</strong>:你直接打 <code>/skill-name</code> 叫它。</li>
+</ol>
+
+
+<h2>對照:CLAUDE.md vs Hook vs Skill</h2>
+
+<table>
+  <tr><th></th><th>怎麼「在場」</th><th>怎麼觸發</th><th>本質</th></tr>
+  <tr>
+    <td><strong>CLAUDE.md</strong></td>
+    <td>永遠在 context</td>
+    <td>不用觸發,一直都在</td>
+    <td>軟性建議(不保證遵守)</td>
+  </tr>
+  <tr>
+    <td><strong>Hook</strong></td>
+    <td>不在 context</td>
+    <td>生命週期事件點,到點一定跑</td>
+    <td>硬性程式(一定執行)</td>
+  </tr>
+  <tr>
+    <td><strong>Skill</strong></td>
+    <td>平常只有 description 在</td>
+    <td>自動(Claude 判斷)或手動(<code>/</code>)</td>
+    <td>按需載入的能力包</td>
+  </tr>
+</table>
+
+<hr>
+
+<div class="box box-exercise">
+  <div class="box-title">🛠 小練習:建一個最小 skill,看它「自動觸發」</div>
+
+  <h4>步驟</h4>
+  <ol>
+    <li>先看一下當前的遊戲畫面以及RTP的驗證結果</li>
+    <pre><code>make web</code></pre>
+    <div class="screenshot">
+      <img src="img/web_demo.png" alt="本來的遊戲畫面">
+      <div class="caption">本來的遊戲畫面</div>
+    </div>
+    <pre><code>make verify</code></pre>
+    <div class="screenshot">
+      <img src="img/verify_demo.png" alt="本來的驗證RTP畫面">
+      <div class="caption">本來的驗證 RTP 畫面</div>
+    </div>
+    <li>輸入</li>
+    <pre><code>幫我寫一個skill名字叫new-game-from-spec,內容是當我給與企劃書及機率的計算資料後,你要根據這兩個新的內容下去修改現有程式碼,變成這款新的遊戲</code></pre>
+
+    <li>建好後,輸入 <code>/new-game-from-spec</code> 並告訴他你企劃書及機率計算的檔案 <code>new-game-from-spec</code>(手動觸發的入口):</li>
+    <pre><code>/new-game-from-spec 請參照docs底下的企劃書.md及機率計算.xlsx</code></pre>
+
+    <li>再次檢視遊戲畫面及RTP的驗證結果</li>
+    <pre><code>make web</code></pre>
+    <div class="screenshot">
+      <img src="img/change_web_demo.png" alt="本來的遊戲畫面">
+      <div class="caption">新的遊戲畫面</div>
+    </div>
+    <pre><code>make verify</code></pre>
+    <div class="screenshot">
+      <img src="img/change_verify_demo.png" alt="本來的遊戲畫面">
+      <div class="caption">新的驗證 RTP 畫面</div>
+    </div>
+  </ol>
+
+  <h4>練習目的</h4>
+  <ul>
+    <li>親手看到 skill 的最小結構(資料夾 + <code>SKILL.md</code> + frontmatter)</li>
+    <li>體驗<strong>自動觸發</strong>:沒打 <code>/</code>,Claude 靠 <code>description</code> 自己叫出 skill</li>
+    <li>對照 progressive disclosure:平常只有 description 在場,用到才載入內文</li>
+  </ul>
+</div>
+
+<div class="box box-check">
+  <div class="box-title">✅ 走完 Chapter 5 你要能...</div>
+  <ul>
+    <li>說出 skill 是什麼(按需載入的能力包),以及它跟 CLAUDE.md / Hook 的差別</li>
+    <li>講出 progressive disclosure:平常只載 <code>description</code>,用到才載入內文,目的是省 context</li>
+    <li>說出 skill 的最小結構(資料夾 + <code>SKILL.md</code>,frontmatter 的 <code>name</code> / <code>description</code>)</li>
+    <li>講出兩種觸發:自動(Claude 看 description 判斷)vs 手動(打 <code>/</code>)</li>
+  </ul>
+</div>
+
+<div class="page-nav">
+  <a href="04-hook.html">
+    <span class="label">← 上一章</span>
+    <span class="title">Chapter 4 · Hook</span>
+  </a>
+  <a href="06-slash-commands.html" class="next">
+    <span class="label">下一章 →</span>
+    <span class="title">Chapter 6 · Slash commands</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

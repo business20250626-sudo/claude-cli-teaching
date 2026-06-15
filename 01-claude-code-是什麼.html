@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 1 · Claude Code 是什麼 — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link active" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 1</span>
+  Claude Code 是什麼?
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 5 分鐘讀完</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p>Claude Code 是 Anthropic 出的 <strong>agentic coding 工具</strong>:它直接跑在你的<strong>終端機</strong>裡,能讀懂整個 codebase、跨檔案改程式、跑指令與測試、操作 git。不是「問它怎麼做、你自己回來敲」,而是<strong>「講一次,它自己做完」</strong>。</p>
+</div>
+
+<h2>它跟「Claude」是什麼關係</h2>
+
+<p><strong>Claude</strong> 是 Anthropic 的 AI 模型家族(Opus / Sonnet / Haiku)。<strong>Claude Code</strong> 則是 Anthropic 官方用這些模型打造的 <strong>coding agent</strong> —— 把模型接上「能讀寫你檔案、能跑指令」的工具,變成一個會幫你做事的開發夥伴。</p>
+
+<h2>在哪裡用?本教學用終端機 CLI</h2>
+
+<p>Claude Code 同一套引擎,有好幾種介面,你的 CLAUDE.md、設定、MCP 在各介面通用。先有個印象就好,<strong>這份教學從頭到尾用終端機 CLI</strong>。</p>
+
+<table>
+  <tr>
+    <th>介面</th>
+    <th>是什麼</th>
+    <th>本教學</th>
+  </tr>
+  <tr>
+    <td><strong>終端機 CLI</strong></td>
+    <td><strong>在命令列直接跑,功能最完整</strong></td>
+    <td><strong>✅ 整份教學用這個</strong></td>
+  </tr>
+  <tr>
+    <td>VS Code / JetBrains</td>
+    <td>編輯器擴充,inline diff、@-mention</td>
+    <td>之後可自行加裝</td>
+  </tr>
+  <tr>
+    <td>桌面 App</td>
+    <td>獨立視窗,可並行多個 session</td>
+    <td>—</td>
+  </tr>
+  <tr>
+    <td>Web(claude.ai/code)</td>
+    <td>瀏覽器內跑,免本機安裝</td>
+    <td>—</td>
+  </tr>
+</table>
+
+<h2>它跟「純聊天」的 AI 差在哪?</h2>
+
+<p>你可能會問:「我已經會用 ChatGPT 問程式問題了,幹嘛還要 Claude Code?」差別在<strong>它能不能直接動你的專案</strong>:</p>
+
+<table>
+  <tr>
+    <th>能力</th>
+    <th>ChatGPT 網頁</th>
+    <th>Claude Code</th>
+  </tr>
+  <tr>
+    <td>讀你整個 repo</td>
+    <td>❌ 一次只能貼幾個檔</td>
+    <td>✅ 自己讀,不用手動貼</td>
+  </tr>
+  <tr>
+    <td>跨多檔改程式</td>
+    <td>❌ 只能給你貼回去</td>
+    <td>✅ 直接改你的檔(改前先給你看 diff)</td>
+  </tr>
+  <tr>
+    <td>跑指令 / 測試</td>
+    <td>❌</td>
+    <td>✅ 在你的機器上跑,看到結果再修</td>
+  </tr>
+  <tr>
+    <td>git(commit / branch / PR)</td>
+    <td>❌</td>
+    <td>✅ 直接幫你做</td>
+  </tr>
+  <tr>
+    <td>接外部工具(Jira / Slack / Drive)</td>
+    <td>❌</td>
+    <td>✅ 透過 MCP</td>
+  </tr>
+</table>
+
+<p>換句話說 —— 以前「上 ChatGPT 問怎麼做 → 回 IDE 自己改 → 再上去問下一步」這個來回,在 Claude Code 變成<strong>「描述目標,它規劃、跨檔執行、跑測試驗證,再回報給你」</strong>。</p>
+
+
+<hr>
+
+<div class="box box-check">
+  <div class="box-title">✅ 走完 Chapter 1 你要能說</div>
+  <ul>
+    <li>「Claude Code 是 Anthropic 做的、跑在終端機的 agentic coding 工具」</li>
+    <li>「它跟純聊天 AI 的差別:能讀整個 repo、跨檔改程式、跑指令、操作 git」</li>
+    <li>「它有 CLI / IDE / 桌面 / Web 幾種介面,這份教學用 CLI」</li>
+  </ul>
+</div>
+
+<div class="page-nav">
+  <a href="index.html">
+    <span class="label">← 回首頁</span>
+    <span class="title">Claude Code 入門</span>
+  </a>
+  <a href="02-安裝設定.html" class="next">
+    <span class="label">下一章 →</span>
+    <span class="title">Chapter 2 · 安裝設定</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

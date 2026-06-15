@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 4 · Hook — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link active" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 4</span>
+  Hook — 在固定事件點「一定會跑」的程式
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 8 分鐘讀完,加上小練習共 20 分鐘</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p>Hook 是綁在 Claude Code <strong>生命週期特定事件點</strong>上的觸發機制:<strong>到點就觸發</strong>,(部分事件)再由 <code>matcher</code> 篩、由 handler 決定動作。跟 CLAUDE.md 最大的差別 —— CLAUDE.md 是<strong>軟性建議</strong>(不保證遵守),Hook<strong>一定會執行</strong>的程式,不管 Claude 想不想。</p>
+</div>
+
+<h2>為什麼需要它:接續 Chapter 3 的伏筆</h2>
+
+<p>Chapter 3 講過,CLAUDE.md 是 context、<strong>不保證</strong>被遵守。所以如果某件事「<strong>一定要在某個時間點發生</strong>」——例如每次 commit 前一定要 lint、每次改完檔一定要格式化——寫在 CLAUDE.md 不夠保險。</p>
+
+<p><strong>Hook 就是硬性版的解法</strong>:它在固定事件點執行,是真正會跑的 shell / 動作,<strong>不靠 Claude「願不願意」</strong>。</p>
+
+<h2>運作:三段式</h2>
+
+<ol>
+  <li><strong>事件點(event)</strong>:生命週期跑到某個點(例如「工具呼叫前」)</li>
+  <li><strong>matcher(篩選,部分事件才有)</strong>:符合條件才往下(例如只在用 <code>Bash</code> 工具時)</li>
+  <li><strong>handler(動作)</strong>:真正要跑的東西(跑 shell、丟給 LLM、POST 到端點…)</li>
+</ol>
+
+<h2>常見的事件點</h2>
+
+<p>事件其實很多,這裡列幾個最常用的(完整清單見官方 <a href="https://code.claude.com/docs/en/hooks" target="_blank">hooks 文件</a>):</p>
+
+<table>
+  <tr><th>事件</th><th>什麼時候觸發</th></tr>
+  <tr><td><code>SessionStart</code></td><td>session 開始或恢復時</td></tr>
+  <tr><td><code>UserPromptSubmit</code></td><td>你送出 prompt、Claude 處理前</td></tr>
+  <tr><td><code>PreToolUse</code></td><td>工具呼叫<strong>執行前</strong>(可以攔下來)</td></tr>
+  <tr><td><code>PostToolUse</code></td><td>工具呼叫成功後</td></tr>
+  <tr><td><code>Stop</code></td><td>Claude 回完一輪時</td></tr>
+  <tr><td><code>SessionEnd</code></td><td>session 結束時</td></tr>
+</table>
+
+<h2>matcher:篩「哪些情況才觸發」</h2>
+
+<p>matcher 主要用在 <strong>tool 相關事件</strong>,用工具名來篩:<code>Bash</code>、<code>Edit|Write</code>(兩者皆可)、<code>mcp__.*</code>(正則)。</p>
+
+<div class="box box-warning">
+  <div class="box-title">⚠️ 不是每個事件都有 matcher</div>
+  <p>像 <code>UserPromptSubmit</code>、<code>Stop</code> <strong>沒有 matcher,到點一定觸發</strong>。對這些事件寫 matcher 會被無視。matcher 主要是給 <code>PreToolUse</code> / <code>PostToolUse</code> 這類「想針對特定工具」的場景用的。</p>
+</div>
+
+<h2>handler:觸發後跑什麼(5 種,三個類別)</h2>
+
+<table>
+  <tr><th>類別</th><th><code>type</code></th><th>做什麼</th></tr>
+  <tr>
+    <td><strong>規則</strong></td>
+    <td><code>command</code></td>
+    <td>跑一段 shell 腳本;事件的 JSON 從 stdin 進去,用 exit code / stdout 回報結果</td>
+  </tr>
+  <tr>
+    <td rowspan="2"><strong>委派判斷</strong></td>
+    <td><code>prompt</code></td>
+    <td>把 prompt 丟給 Claude 模型做<strong>單次 yes/no 判斷</strong>,回傳 JSON 決定</td>
+  </tr>
+  <tr>
+    <td><code>agent</code> <span style="color:#A93226;">⚠️ 實驗性</span></td>
+    <td>生一個 subagent,可用 Read / Grep / Glob 等工具<strong>查證後</strong>再回判斷(官方標 experimental,可能會變)</td>
+  </tr>
+  <tr>
+    <td rowspan="2"><strong>外送 / 接外部</strong></td>
+    <td><code>http</code></td>
+    <td>把事件 JSON 以 HTTP POST 丟到一個 URL,用回應(同樣的 JSON 格式)決定</td>
+  </tr>
+  <tr>
+    <td><code>mcp_tool</code></td>
+    <td>呼叫一個<strong>已連線的 MCP server</strong> 上的工具,工具的文字輸出當成 command 的 stdout 處理</td>
+  </tr>
+</table>
+
+<hr>
+
+<div class="box box-exercise">
+  <div class="box-title">🛠 小練習:建立你的第一個Hook</div>
+
+  <h4>步驟</h4>
+  <ol>
+    <li>你想要建立的地方輸入:</li>
+  </ol>
+
+  <pre><code>
+    請幫我建立 Claude Code Hook，目標是防止 AI 或使用者誤執行高風險指令。
+      需求如下：
+        1	強制阻擋（直接拒絕執行）
+        •	git push --force
+        •	git push -f
+        •	git push --force-with-lease
+        •	git push origin --delete
+        •	sudo rm
+        •	rm -rf /
+        •	rm -rf ~
+        •	rm -rf *s
+      當偵測到上述指令時：
+        •	回傳非 0 Exit Code
+        •	顯示清楚的阻擋原因
+</code></pre>
+
+  <ol start="2">
+    <li>輸入以下指令查看剛剛建立的內容:。</li>
+    <pre><code>/hooks</code></pre>
+    <pre><code>/cat ./.claude/settings.json</code></pre>
+    <pre><code>/cat ./.claude/hooks/block-dangerous-commands.sh</code></pre>
+    <li>開新 session(設定變更要重開才生效),輸入以下內容測試</li>
+    <pre><code>rrm -rf ~</code></pre>
+  </ol>
+  <h4>練習目的</h4>
+  <ul>
+    <li>體驗 hook 在 <code>Edit|Write</code> 之後<strong>自動、必定</strong>觸發</li>
+    <li>看出 matcher(<code>Edit|Write</code>)怎麼決定「哪些工具才觸發」</li>
+    <li>對照 CLAUDE.md:這不是「建議」,是一定會跑的程式</li>
+  </ul>
+</div>
+
+<div class="box box-check">
+  <div class="box-title">✅ 走完 Chapter 4 你要能...</div>
+  <ul>
+    <li>說出 Hook 是什麼(綁在事件點、到點一定觸發的機制)</li>
+    <li>講出它跟 CLAUDE.md 的差別(軟性建議 vs 硬性保證)</li>
+    <li>說出運作三段:事件 → matcher → handler</li>
+    <li>知道 5 種 handler(<code>command</code> / <code>http</code> / <code>mcp_tool</code> / <code>prompt</code> / <code>agent</code>),且 <code>agent</code> 是實驗性</li>
+    <li>知道 matcher 只有部分事件支援,其餘到點一定觸發</li>
+  </ul>
+</div>
+
+<div class="page-nav">
+  <a href="03-claude-md.html">
+    <span class="label">← 上一章</span>
+    <span class="title">Chapter 3 · CLAUDE.md</span>
+  </a>
+  <a href="05-skill.html" class="next">
+    <span class="label">下一章 →</span>
+    <span class="title">Chapter 5 · Skill</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

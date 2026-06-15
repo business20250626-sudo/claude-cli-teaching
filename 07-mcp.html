@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 7 · MCP servers — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link active" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 7</span>
+  MCP servers — 接上外部工具的標準
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 10 分鐘讀完,加上小練習共 25 分鐘</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p>MCP(Model Context Protocol)是<strong>讓模型接上外部工具 / 資料的開放標準</strong> — 官方的比喻是「<strong>AI 界的 USB-C</strong>」。工具提供方把用法包成一個 MCP server、<strong>只包一次</strong>,任何會講 MCP 的 agent 插上就能用;接上之後你只管下任務,Claude 在工作時<strong>自己判斷該呼叫哪個工具</strong>。</p>
+</div>
+
+<h2>為什麼需要它:從「各接各的」到「包一次、到處插」</h2>
+
+<p>想像 USB-C 出現之前的世界:每台裝置一種接頭,出門要帶一袋轉接線。<strong>只有 API 的年代就是這樣</strong> — 工具只給你一份 API 文件,每個想讓 agent 用它的人,都得自己讀文件、自己定義用法、自己寫接線塞給自己的 agent。十個團隊接同一個服務,同一條線就被重寫十次;agent 一多、工具一多,接線數量是<strong>相乘</strong>地長。</p>
+
+<p><strong>MCP 把接頭統一了</strong>:改由<strong>工具提供方</strong>把「怎麼用我」包裝成一個 MCP server — 有哪些工具、各吃什麼參數、回傳什麼,全部包好,<strong>只包一次</strong>。任何會講 MCP 的 agent(Claude Code、ChatGPT、Cursor⋯)執行時掛上就能用,官方原話就是「<strong>build once and integrate everywhere</strong>」。對你來說,Claude Code 因此能直接接上<strong>數百種</strong>現成的外部工具和資料源。</p>
+
+<p>而且接上之後的體驗也不一樣:你<strong>不是「呼叫工具」,而是「下任務」</strong> — server 把每個工具的用途描述好了,Claude 看著你的任務,自己挑、自己呼叫、自己串。</p>
+
+<div class="box box-concept">
+  <div class="box-title">🔗 跟 Skill 的分工</div>
+  <p>容易搞混的對照:<strong>skill 給 Claude 的是「指示」</strong>(教它怎麼做事的知識),<strong>MCP 給 Claude 的是「工具」</strong>(它原本根本碰不到的外部系統)。skill 教做法、MCP 長出新的手,兩者常常搭配:一個 skill 的步驟裡可能就會用到 MCP 工具。</p>
+</div>
+
+<h2>怎麼接:claude mcp add</h2>
+
+<p>先建立一個觀念:MCP server 是<strong>一支程式</strong>,它總得在某個地方跑。<strong>跑在哪</strong>,決定你用哪種方式接:</p>
+
+<h4>遠端 HTTP server(程式跑在提供方的雲端,官方推薦)</h4>
+
+<p>像 Notion 把 server 架在他們自己的機器上,你只要給 Claude Code 一個 <strong>URL</strong>,之後每次用工具就是發 HTTP 請求過去。你的機器上什麼都不用裝。雲端服務(Notion、GitHub、Sentry)幾乎都是這種:</p>
+
+<pre><code># 基本語法
+claude mcp add --transport http &lt;名稱&gt; &lt;URL&gt;
+
+# 官方範例:接 Notion
+claude mcp add --transport http notion https://mcp.notion.com/mcp</code></pre>
+
+<h4>本機 stdio server(程式跑在你的電腦上)</h4>
+
+<p>這種 server 是一支<strong>由 Claude Code 親自啟動的本機程序</strong>:兩支程式用 stdin / stdout(標準輸入輸出)對話 — stdio 這名字就是這麼來的,完全不走網路。所以你給的不是 URL,而是一條<strong>啟動指令</strong> — <code>--</code> 分隔符前面是 Claude Code 自己的選項,<strong>後面整串就是它替你執行的指令</strong>:</p>
+
+<pre><code># 基本語法:-- 後面是「怎麼把這支 server 跑起來」
+claude mcp add [選項] &lt;名稱&gt; -- &lt;指令&gt; [參數...]</code></pre>
+
+<p>它存在的理由:有些東西<strong>只有你的機器碰得到</strong> — 內網服務、本機檔案,以及最值得記住的場景:<strong>自製工具</strong>。想像把公司內部 API 包成一支 MCP server(可以請 Claude 幫你寫),跑在每個人本機,設定 commit 進 repo — 全隊每個人的 Claude 從此都查得到內部系統。</p>
+
+<table>
+  <tr><th></th><th>遠端 HTTP</th><th>本機 stdio</th></tr>
+  <tr>
+    <td><strong>server 程式跑在哪</strong></td>
+    <td>提供方的雲端</td>
+    <td>你的電腦(Claude Code 替你啟動)</td>
+  </tr>
+  <tr>
+    <td><strong>你提供什麼</strong></td>
+    <td>一個 URL</td>
+    <td>一條啟動指令(<code>--</code> 後面那串)</td>
+  </tr>
+  <tr>
+    <td><strong>溝通方式</strong></td>
+    <td>HTTP 請求(走網路)</td>
+    <td>stdin / stdout(不走網路)</td>
+  </tr>
+  <tr>
+    <td><strong>典型場景</strong></td>
+    <td>雲端服務(Notion、GitHub、Sentry)</td>
+    <td>只有本機碰得到的東西、公司內部 API 等自製工具</td>
+  </tr>
+</table>
+
+<p>實務上不用背:<strong>看工具的 README 給你的是 URL 還是啟動指令</strong>,給什麼就用什麼。</p>
+
+
+<h4>接好之後的管理</h4>
+
+<pre><code>claude mcp list      # 列出所有設定好的 server
+claude mcp get notion   # 看某個 server 的細節
+claude mcp remove notion  # 移除
+
+/mcp                 # (session 內)看連線狀態、各 server 的工具數、OAuth 登入</code></pre>
+
+<p>遠端 server 多半要登入授權:打 <code>/mcp</code>,挑那個 server,它會開瀏覽器走 OAuth 流程,跟你平常「用 Google 登入」一樣。</p>
+
+
+<div class="box box-warning">
+  <div class="box-title">⚠️ 安全:接之前先想兩件事</div>
+  <ul>
+    <li><strong>信任來源</strong>:官方文件的警告 —「接每個 server 之前,先確認你信任它。會抓外部內容的 server 可能讓你暴露在 prompt injection 風險中。」(惡意內容混進 Claude 看到的資料裡,引導它做不該做的事)</li>
+    <li><strong>金鑰不落地</strong>:API key、token <strong>不要直接寫進會 commit 的 <code>.mcp.json</code></strong> — 它支援 <code>${VAR}</code> 環境變數展開,repo 裡只放佔位符,真正的 key 各自放在自己的 shell 環境(<code>~/.zshrc</code> 裡 <code>export</code>)。另外注意:在 <code>claude mcp add</code> 指令列直接打真 key,那行指令會<strong>連 key 一起留在 shell 歷史紀錄</strong>裡,個人用勉強可以,但別養成習慣。</li>
+  </ul>
+</div>
+
+
+<hr>
+
+<div class="box box-exercise">
+  <div class="box-title">🛠 小練習:接 Notion 官方 MCP server,看 Claude 自己挑工具</div>
+
+  <h4>步驟</h4>
+  <ol>
+    <li>用官方文件的指令接上 Notion 的遠端 HTTP server(只要給 URL,什麼都不用裝):</li>
+    <pre><code>claude mcp add --transport http notion https://mcp.notion.com/mcp</code></pre>
+
+    <li>開 Claude Code,打 <code>/mcp</code>,挑 <code>notion</code> 完成 <strong>OAuth 登入</strong> — 它會開瀏覽器讓你授權,跟「用 Google 登入」一樣。授權完回到 <code>/mcp</code>,確認 <code>notion</code> 顯示已連線,旁邊列出它提供了幾個工具。</li>
+
+    <li>用<strong>自然語言</strong>下任務 — 注意你完全沒指定要用哪個工具:</li>
+    <pre><code>列出我 Notion 裡最近編輯的幾個頁面</code></pre>
+    <li>觀察 Claude 的執行過程:它自己從 Notion server 的工具裡<strong>挑了對的那個</strong>(會看到類似 <code>mcp__notion__...</code> 的工具呼叫)— 這就是「agent 工作時自己判斷該呼叫哪個」。</li>
+    <li>(收尾,可選)練習完不想留著就移除:<code>claude mcp remove notion</code>。</li>
+  </ol>
+
+  <h4>練習目的</h4>
+  <ul>
+    <li>走一次完整流程:加 server → <code>/mcp</code> OAuth 登入 → 自然語言使用</li>
+    <li>親眼看到「你不指定工具,Claude 自己判斷呼叫哪個」</li>
+  </ul>
+</div>
+
+<div class="box box-check">
+  <div class="box-title">✅ 走完 Chapter 7 你要能...</div>
+  <ul>
+    <li>說出 MCP 解決什麼問題:工具提供方包一次 server,任何會講 MCP 的 agent 掛上就能用</li>
+    <li>分得出 skill 和 MCP:一個給「指示」、一個給「工具」</li>
+    <li>會用 <code>claude mcp add</code>(HTTP / stdio)接 server、用 <code>/mcp</code> 管理與 OAuth 登入</li>
+  </ul>
+</div>
+
+<div class="page-nav">
+  <a href="06-slash-commands.html">
+    <span class="label">← 上一章</span>
+    <span class="title">Chapter 6 · Slash commands</span>
+  </a>
+  <a href="08-subagent.html" class="next">
+    <span class="label">下一章 →</span>
+    <span class="title">Chapter 8 · Subagent</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

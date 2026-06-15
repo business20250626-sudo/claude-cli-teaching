@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 2 · 安裝設定 — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link active" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 2</span>
+  安裝設定
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 8 分鐘(含下載),小練習 10 分鐘</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p>一行指令裝好 Claude Code,<code>cd</code> 進專案、跑 <code>claude</code>、瀏覽器登入,5 分鐘搞定。跟桌面 App 不同 —— 它<strong>沒有「連接資料夾」這個動作</strong>,你在哪個目錄啟動,它就在那裡工作。</p>
+</div>
+
+<h2>開始之前</h2>
+<ul>
+  <li>範例專案</li>
+  <li>一個 <strong>Claude 訂閱</strong>(Pro / Max / Team / Enterprise)</li>
+</ul>
+
+<p>沒有現成專案的話,複製下面這行,clone 範例 repo 來練習:</p>
+<pre><code>git clone https://github.com/business20250626-sudo/claude-cli-demo.git</code></pre>
+
+<h2>步驟 1:安裝</h2>
+
+<h3>原生安裝(官方推薦,會自動背景更新)</h3>
+
+<p><strong>macOS / Linux / WSL:</strong></p>
+<pre><code>curl -fsSL https://claude.ai/install.sh | bash</code></pre>
+
+<p><strong>Windows PowerShell:</strong></p>
+<pre><code>irm https://claude.ai/install.ps1 | iex</code></pre>
+
+<h2>步驟 2:啟動 + 登入</h2>
+
+<p>到任一個專案目錄啟動:</p>
+<pre><code>cd /path/to/your/project
+claude</code></pre>
+
+<p>第一次跑會要你登入,照提示在<strong>瀏覽器</strong>完成認證即可。憑證會存在本機,之後不用每次登入。要換帳號或重新登入,在 session 裡輸入:</p>
+<pre><code>/login</code></pre>
+
+<div class="box box-check">
+  <div class="box-title">✅ 走完 Chapter 2 你要能做到</div>
+  <ul>
+    <li>裝好 Claude Code,終端機打 <code>claude</code> 能啟動</li>
+    <li>完成瀏覽器登入</li>
+    <li>知道用 <code>cd</code> 進專案目錄啟動,沒有「連接資料夾」這步</li>
+  </ul>
+</div>
+
+<div class="box box-warning">
+  <div class="box-title">⚠️ 卡關了?</div>
+  <p>更多安裝問題見官方 <a href="https://code.claude.com/docs/en/troubleshoot-install" target="_blank">installation troubleshooting</a>。</p>
+</div>
+
+<div class="page-nav">
+  <a href="01-claude-code-是什麼.html">
+    <span class="label">← 上一章</span>
+    <span class="title">Chapter 1 · Claude Code 是什麼</span>
+  </a>
+  <a href="03-claude-md.html" class="next">
+    <span class="label">下一章 →</span>
+    <span class="title">Chapter 3 · CLAUDE.md</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

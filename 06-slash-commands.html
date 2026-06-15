@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 6 · Slash commands — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link active" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 6</span>
+  Slash commands — 打 <code>/</code> 主動使用
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 8 分鐘讀完,加上小練習共 20 分鐘</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p>slash command 是<strong>主動觸發</strong>方式(打 <code>/</code>)。<code>/</code> 叫得出來的東西本質分兩類:<strong>內建邏輯指令</strong>(<code>/compact</code> 這種改不了)和 <strong>skill</strong>(一份讓 Claude 編排的指示)。skill 底下再按來源分<strong>官方內建</strong>和<strong>你自訂</strong>。</p>
+</div>
+
+<h2>基本用法</h2>
+
+<p>在 session 裡打 <code>/</code> 就會列出所有可用的指令,繼續打字可以過濾。兩個規則:</p>
+
+<ul>
+  <li>指令<strong>只在訊息開頭</strong>會被認得 — 訊息中間出現的 <code>/xxx</code> 只是普通文字。</li>
+  <li>指令名稱<strong>後面的文字會當作參數(arguments)傳給它</strong>,例如 <code>/compact 重點保留測試結果</code>。</li>
+</ul>
+
+<h2>本質分兩類:內建指令 vs skill</h2>
+
+<h3>1. 內建指令:行為寫死在 CLI 裡</h3>
+
+<p>這類指令的邏輯直接寫在 Claude Code 程式裡 — <strong>固定流程、一定那樣跑、你改不了</strong>。它不經過 Claude 的判斷,跟模型無關。官方清單將近 90 個,以下按使用情境挑常用的介紹:</p>
+
+<h4>每天都會碰到的</h4>
+
+<table>
+  <tr><th>指令</th><th>用途</th></tr>
+  <tr><td><code>/clear</code></td><td>開新對話、context 歸零。<strong>換任務就清</strong>,別讓上個任務的脈絡污染下一個。舊對話留在 <code>/resume</code> 裡,還能 <code>/clear 修登入bug</code> 順手幫舊對話取名</td></tr>
+  <tr><td><code>/compact</code></td><td>把對話摘要壓縮,釋放 context 但保留重點,可指定方向:<code>/compact 重點保留測試結果</code>。跟 <code>/clear</code> 的差別:<code>/clear</code> 是斷捨離,<code>/compact</code> 是瘦身續用</td></tr>
+  <tr><td><code>/context</code></td><td>把 context 用量畫成色塊圖,看 token 被誰吃掉(工具輸出?CLAUDE.md 太肥?)。覺得 Claude 變鈍時先看這個</td></tr>
+  <tr><td><code>/resume</code></td><td>回到之前的對話(開選單挑,或直接給名字/ID)。別名 <code>/continue</code></td></tr>
+  <tr><td><code>/rewind</code></td><td>後悔藥:把對話和/或程式碼回捲到先前的 checkpoint。Claude 改壞東西時用。別名 <code>/undo</code></td></tr>
+</table>
+
+<h4>改 Claude 行為的</h4>
+
+<table>
+  <tr><th>指令</th><th>用途</th></tr>
+  <tr><td><code>/model</code></td><td>切換模型,會存成之後 session 的預設</td></tr>
+  <tr><td><code>/effort</code></td><td>調整推理深度(low ~ max):簡單任務調低省時間,難題調高</td></tr>
+  <tr><td><code>/plan</code></td><td>進 plan mode:Claude 先提計畫、你核准了才動手。大改動前用,可帶任務描述:<code>/plan 重構付款流程</code></td></tr>
+  <tr><td><code>/btw</code></td><td>問個小問題但<strong>不寫進對話歷史</strong>,不污染 context。例如做到一半想問「git stash 怎麼用」</td></tr>
+</table>
+
+<h4>專案設定類(前幾章都見過)</h4>
+
+<table>
+  <tr><th>指令</th><th>用途</th></tr>
+  <tr><td><code>/init</code></td><td>替專案產生起手的 CLAUDE.md(Chapter 3)</td></tr>
+  <tr><td><code>/memory</code></td><td>編輯 CLAUDE.md / 記憶檔(Chapter 3)</td></tr>
+  <tr><td><code>/hooks</code></td><td>檢視 hook 設定(Chapter 4)</td></tr>
+  <tr><td><code>/skills</code></td><td>列出 skill,按 <code>Space</code> 可隱藏某個 skill(Chapter 5)</td></tr>
+  <tr><td><code>/permissions</code></td><td>管理工具權限的 allow / ask / deny 規則 — 不想每次都被問「可以執行嗎」就來這裡設</td></tr>
+  <tr><td><code>/mcp</code></td><td>管理 MCP server 連線</td></tr>
+  <tr><td><code>/agents</code></td><td>管理 subagent 設定</td></tr>
+  <tr><td><code>/doctor</code></td><td>健檢:診斷安裝與設定有沒有問題,按 <code>f</code> 讓 Claude 直接修</td></tr>
+</table>
+
+<h4>看狀態、看成果</h4>
+
+<table>
+  <tr><th>指令</th><th>用途</th></tr>
+  <tr><td><code>/diff</code></td><td>互動式 diff 檢視器:看未 commit 的改動、逐回合的修改</td></tr>
+  <tr><td><code>/usage</code></td><td>看花費、方案用量(別名 <code>/cost</code>、<code>/stats</code>)</td></tr>
+  <tr><td><code>/status</code></td><td>版本、模型、帳號、連線狀態總覽</td></tr>
+  <tr><td><code>/export</code></td><td>把對話匯出成純文字檔,要留紀錄或貼給同事時用</td></tr>
+  <tr><td><code>/copy</code></td><td>複製 Claude 上一則回應到剪貼簿(<code>/copy 2</code> 拿倒數第二則)</td></tr>
+</table>
+
+<h4>背景與平行作業(進階)</h4>
+
+<table>
+  <tr><th>指令</th><th>用途</th></tr>
+  <tr><td><code>/tasks</code></td><td>看目前背景在跑什麼(別名 <code>/bashes</code>)</td></tr>
+  <tr><td><code>/background</code></td><td>把整個 session 丟到背景繼續跑、把終端機還你;之後用 <code>/resume</code> 接回來</td></tr>
+  <tr><td><code>/fork</code></td><td>開一個繼承完整對話的背景 subagent 去做支線任務,主線不中斷</td></tr>
+  <tr><td><code>/schedule</code></td><td>建立定時排程任務(跑在 Anthropic 雲端)</td></tr>
+</table>
+
+<h4>雜項但實用</h4>
+
+<table>
+  <tr><th>指令</th><th>用途</th></tr>
+  <tr><td><code>/help</code></td><td>列出說明與可用指令</td></tr>
+  <tr><td><code>/config</code></td><td>設定介面:主題、編輯模式等(別名 <code>/settings</code>)</td></tr>
+  <tr><td><code>/feedback</code></td><td>回報 bug 給 Anthropic(別名 <code>/bug</code>)</td></tr>
+  <tr><td><code>/release-notes</code></td><td>看版本更新日誌</td></tr>
+  <tr><td><code>/exit</code></td><td>離開(別名 <code>/quit</code>)</td></tr>
+</table>
+
+<div class="box box-concept">
+  <div class="box-title">🎯 如果只記五個</div>
+  <p><code>/clear</code>、<code>/compact</code>、<code>/resume</code>、<code>/rewind</code>、<code>/permissions</code> — 涵蓋 context 管理和權限這兩個最常見的痛點。完整清單見<a href="https://code.claude.com/docs/en/commands" target="_blank">官方 commands reference</a>(會依平台、方案、環境而增減)。</p>
+</div>
+
+<h3>2. skill:一份讓 Claude 編排的指示</h3>
+
+<p>跟內建指令相反,這類東西的本體是 <strong>prompt</strong> — 把一份詳細指示交給 Claude,讓它用自己的工具去編排執行,所以同一個 skill 每次跑的過程可能不完全一樣。按來源分兩種:</p>
+
+<ul>
+  <li><strong>官方內建(bundled)</strong>:Claude Code 自帶、每個 session 都可用,例如 <code>/code-review</code>(程式碼審查)、<code>/debug</code>(疑難排解)、<code>/loop</code>(重複執行)、<code>/run</code> / <code>/verify</code>(啟動 app 驗證改動)。在官方指令清單裡會標 <strong>Skill</strong> 字樣。</li>
+  <li><strong>你自訂</strong>:就是 Chapter 5 教的 skill,放在專案的 <code>.claude/skills/</code>(或個人的 <code>~/.claude/skills/</code>)底下,建好就多一個 <code>/</code> 指令。</li>
+</ul>
+
+<h4>自訂 skill 的結構</h4>
+
+<pre><code>.claude/skills/
+└── explain-file/        ← 資料夾名 = 指令名(/explain-file)
+    └── SKILL.md         ← 檔名固定,一定叫 SKILL.md(大寫)
+   (可選)scripts/ 等     ← 支援檔案隨你加,名字隨你取</code></pre>
+
+<ul>
+  <li><strong>檔名固定是 <code>SKILL.md</code></strong>:這是入口檔、必須存在。其他檔案(範本、腳本、參考資料)隨你加,但 Claude 是從 <code>SKILL.md</code> 開始讀的。</li>
+  <li><strong>指令名來自資料夾名</strong>,不是 frontmatter 的 <code>name</code>(<code>name</code> 只影響清單裡的顯示名稱)。所以 <code>.claude/skills/deploy-staging/SKILL.md</code> → <code>/deploy-staging</code>。</li>
+</ul>
+
+<table>
+  <tr><th></th><th>內建指令</th><th>skill</th></tr>
+  <tr>
+    <td><strong>本體</strong></td>
+    <td>寫死在 CLI 的程式邏輯</td>
+    <td>一份 prompt(指示)</td>
+  </tr>
+  <tr>
+    <td><strong>執行者</strong></td>
+    <td>Claude Code 程式本身</td>
+    <td>Claude(讀指示後自己編排)</td>
+  </tr>
+  <tr>
+    <td><strong>能不能改</strong></td>
+    <td>不能</td>
+    <td>bundled 不能改但可停用;自訂的隨你寫</td>
+  </tr>
+  <tr>
+    <td><strong>觸發方式</strong></td>
+    <td>只能你打 <code>/</code></td>
+    <td>你打 <code>/</code>,或 Claude 自動叫用</td>
+  </tr>
+</table>
+
+
+<h2>傳參數:$ARGUMENTS</h2>
+
+<p>指令名稱後面打的文字,可以在 skill 內文裡用佔位符接住:</p>
+
+<table>
+  <tr><th>佔位符</th><th>意思</th></tr>
+  <tr><td><code>$ARGUMENTS</code></td><td>整串參數(照你打的原樣)</td></tr>
+  <tr><td><code>$0</code>、<code>$1</code>…</td><td>第 1、第 2 個參數(空白分隔;要包含空白就加引號)</td></tr>
+</table>
+
+<p>官方文件的例子 — 修 GitHub issue 的 skill:</p>
+
+<pre><code>---
+name: fix-issue
+description: Fix a GitHub issue
+---
+
+Fix GitHub issue $ARGUMENTS following our coding standards.</code></pre>
+
+<p>執行 <code>/fix-issue 123</code>,Claude 收到的就是「Fix GitHub issue 123 following our coding standards.」— <code>$ARGUMENTS</code> 在 Claude 看到內容<strong>之前</strong>就被換成你打的字了。如果 skill 內文沒寫 <code>$ARGUMENTS</code>,參數會自動以 <code>ARGUMENTS: &lt;你打的字&gt;</code> 附加在最後,Claude 一樣看得到。</p>
+
+<p>另外,frontmatter 的 <code>argument-hint</code> 可以在 <code>/</code> 自動補全時提示要帶什麼參數,例如 <code>argument-hint: [issue-number]</code>。</p>
+
+<hr>
+
+<div class="box box-exercise">
+  <div class="box-title">🛠 小練習:建一個「只能手動觸發 + 吃參數」的自訂 command</div>
+
+  <h4>步驟</h4>
+  <ol>
+    <li>在專案裡建一個 skill 檔 <code>.claude/skills/explain-file/SKILL.md</code>(直接手寫,或請 Claude 幫你建):</li>
+    <pre><code>---
+description: 解釋指定檔案在做什麼
+argument-hint: [檔案路徑] [想了解的重點]
+disable-model-invocation: true
+---
+
+請閱讀 $0,用三點以內解釋它在做什麼。
+特別針對這個重點說明:$1</code></pre>
+
+    <li>打 <code>/</code> 再打 <code>ex</code> 過濾,確認清單出現 <code>explain-file</code>,而且後面帶著 <code>[檔案路徑] [想了解的重點]</code> 的參數提示(這就是 <code>argument-hint</code>)。</li>
+
+    <li>帶參數執行(第二個參數有空白,所以加引號):</li>
+    <pre><code> /explain-file cmd內的文件 "是怎麼運作的"</code></pre>
+
+    <li>觀察 Claude 的回應:它收到的指示裡 <code>$0</code> 已經被換成 <code>cmd內的文件</code>、<code>是怎麼運作的</code> 換成你引號裡的那句話。</li>
+  </ol>
+
+  <h4>練習目的</h4>
+  <ul>
+    <li>看到 <code>$0</code> / <code>$1</code> / <code>$ARGUMENTS</code> 參數替換真的發生</li>
+  </ul>
+</div>
+
+<div class="box box-check">
+  <div class="box-title">✅ 走完 Chapter 6 你要能...</div>
+  <ul>
+    <li>說出 <code>/</code> 叫得出來的東西分兩類:內建邏輯指令(改不了)vs skill(prompt,讓 Claude 編排)</li>
+    <li>會用 <code>$ARGUMENTS</code> / <code>$0</code> / <code>$1</code> 讓 command 吃參數,會用 <code>argument-hint</code> 提示參數</li>
+  </ul>
+</div>
+
+<div class="page-nav">
+  <a href="05-skill.html">
+    <span class="label">← 上一章</span>
+    <span class="title">Chapter 5 · Skill</span>
+  </a>
+  <a href="07-mcp.html" class="next">
+    <span class="label">下一章 →</span>
+    <span class="title">Chapter 7 · MCP servers</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

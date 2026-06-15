@@ -1,0 +1,751 @@
+/* ============================================================
+   Cowork 教學 — 共用樣式
+   配色: 深藍 #2C3E50 / 橘 #E67E22 / 灰 #ECF0F1
+   ============================================================ */
+
+/* === Reset === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei",
+               "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: #2C3E50;
+  background: #FAFAFA;
+  line-height: 1.75;
+  font-size: 17px;
+}
+
+/* === Layout === */
+.site {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: #2C3E50;
+  color: #ECF0F1;
+  padding: 28px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  font-size: 15px;
+}
+
+.main {
+  padding: 48px 56px 64px;
+  max-width: 920px;
+  width: 100%;
+}
+
+/* === Sidebar === */
+.sidebar-brand {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #FFF;
+  text-decoration: none;
+  padding: 0 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 16px;
+}
+
+.sidebar-brand small {
+  display: block;
+  font-weight: 400;
+  font-size: 0.75em;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.sidebar-section {
+  margin-bottom: 20px;
+}
+
+.sidebar-heading {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #95A5A6;
+  padding: 0 12px;
+  margin-bottom: 6px;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 7px 12px;
+  color: #ECF0F1;
+  text-decoration: none;
+  border-radius: 4px;
+  margin: 2px 0;
+  transition: background 0.15s;
+}
+
+.sidebar-link:hover {
+  background: rgba(255,255,255,0.08);
+  color: #FFF;
+}
+
+.sidebar-link.active {
+  background: #E67E22;
+  color: #FFF;
+  font-weight: 600;
+}
+
+.sidebar-link .num {
+  display: inline-block;
+  width: 32px;
+  font-size: 0.85em;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+.sidebar-link.active .num {
+  opacity: 1;
+}
+
+/* 尚未上線的章節 (Part A/B 後續會補) */
+span.sidebar-link, .sidebar-link.disabled {
+  color: #5D7080;
+  cursor: not-allowed;
+  display: block;
+  padding: 7px 12px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+span.sidebar-link:hover, .sidebar-link.disabled:hover {
+  background: transparent;
+  color: #5D7080;
+}
+
+span.sidebar-link::after, .sidebar-link.disabled::after {
+  content: " (待補)";
+  font-size: 0.78em;
+  opacity: 0.6;
+}
+
+/* === Typography === */
+h1, h2, h3, h4 {
+  font-weight: 700;
+  line-height: 1.35;
+  color: #2C3E50;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 0.3em;
+}
+
+h1 .chapter-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #E67E22;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin: 2em 0 0.6em;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid #E67E22;
+}
+
+h3 {
+  font-size: 1.2rem;
+  margin: 1.6em 0 0.5em;
+}
+
+h4 {
+  font-size: 1.05rem;
+  margin: 1.3em 0 0.4em;
+}
+
+p {
+  margin: 1em 0;
+}
+
+ul, ol {
+  margin: 1em 0 1em 1.6em;
+}
+
+li {
+  margin: 0.35em 0;
+}
+
+a {
+  color: #D35400;
+  text-decoration: none;
+  border-bottom: 1px dashed #D35400;
+  transition: all 0.15s;
+}
+
+a:hover {
+  color: #E67E22;
+  border-bottom-style: solid;
+}
+
+strong { color: #2C3E50; font-weight: 700; }
+
+hr {
+  border: none;
+  border-top: 1px solid #ECF0F1;
+  margin: 2em 0;
+}
+
+/* === Code === */
+code {
+  background: #F4F4F4;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  color: #C0392B;
+}
+
+pre {
+  background: #1B2632;
+  color: #ECF0F1;
+  padding: 18px 22px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.2em 0;
+  font-size: 0.92em;
+  line-height: 1.6;
+  position: relative;
+}
+
+pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* === Tables === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0;
+  background: #FFF;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+th, td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ECF0F1;
+  vertical-align: top;
+}
+
+th {
+  background: #2C3E50;
+  color: #FFF;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+tr:last-child td { border-bottom: none; }
+
+td code { font-size: 0.88em; }
+
+/* === 色塊 (concept / exercise / warning / teacher / check) === */
+.box {
+  border-left: 4px solid;
+  padding: 18px 22px 18px 24px;
+  margin: 1.6em 0;
+  border-radius: 0 6px 6px 0;
+}
+
+.box > *:first-child { margin-top: 0; }
+.box > *:last-child { margin-bottom: 0; }
+
+.box-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.box-concept  { background: #EBF5FB; border-color: #3498DB; }
+.box-concept  .box-title { color: #21618C; }
+
+.box-exercise { background: #FEF5E7; border-color: #E67E22; }
+.box-exercise .box-title { color: #B9601A; }
+
+.box-warning  { background: #FDEDEC; border-color: #E74C3C; }
+.box-warning  .box-title { color: #A93226; }
+
+.box-teacher  { background: #FFF9E6; border-color: #F1C40F; }
+.box-teacher  .box-title { color: #927609; }
+
+.box-check    { background: #E8F8F5; border-color: #27AE60; }
+.box-check    .box-title { color: #1E7E47; }
+
+.box-check ul { list-style: none; margin-left: 0; }
+.box-check li::before {
+  content: "☐ ";
+  color: #27AE60;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+/* === Screenshot placeholder === */
+.screenshot {
+  background: repeating-linear-gradient(
+    45deg,
+    #F4F4F4,
+    #F4F4F4 8px,
+    #ECF0F1 8px,
+    #ECF0F1 16px
+  );
+  border: 2px dashed #BDC3C7;
+  padding: 56px 24px;
+  margin: 1.2em 0;
+  text-align: center;
+  color: #7F8C8D;
+  border-radius: 8px;
+  font-style: italic;
+}
+
+.screenshot::before {
+  content: "📷 ";
+  font-style: normal;
+  font-size: 1.5em;
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* 當 .screenshot 內含真實圖片時, 切換成展示模式 */
+.screenshot:has(img) {
+  background: none;
+  border: 1px solid #ECF0F1;
+  padding: 8px;
+  font-style: normal;
+}
+
+.screenshot:has(img)::before {
+  display: none;
+}
+
+.screenshot img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 6px;
+}
+
+.screenshot .caption {
+  margin-top: 8px;
+  font-size: 0.85em;
+  color: #7F8C8D;
+  text-align: center;
+}
+
+/* === Prompt block (give Claude this prompt) === */
+.prompt {
+  background: #FFF;
+  border: 2px solid #2C3E50;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 1.2em 0;
+  font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  position: relative;
+}
+
+.prompt::before {
+  content: "💬 給 Claude 的指令";
+  position: absolute;
+  top: -11px;
+  left: 16px;
+  background: #2C3E50;
+  color: #FFF;
+  padding: 2px 10px;
+  font-size: 0.78em;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+}
+
+.prompt p:first-of-type { margin-top: 0.5em; }
+
+.copy-btn {
+  position: absolute;
+  top: -11px;
+  right: 16px;
+  background: #ECF0F1;
+  border: 1px solid #BDC3C7;
+  color: #2C3E50;
+  padding: 2px 10px;
+  border-radius: 3px;
+  font-size: 0.78em;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+}
+
+.copy-btn:hover {
+  background: #E67E22;
+  color: #FFF;
+  border-color: #E67E22;
+}
+
+.copy-btn.copied {
+  background: #27AE60;
+  color: #FFF;
+  border-color: #27AE60;
+}
+
+/* <pre> 代碼區塊內的複製按鈕:深色底,放右上角內側 */
+pre .copy-btn {
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.25);
+  color: #ECF0F1;
+}
+
+pre .copy-btn:hover {
+  background: #E67E22;
+  color: #FFF;
+  border-color: #E67E22;
+}
+
+pre .copy-btn.copied {
+  background: #27AE60;
+  color: #FFF;
+  border-color: #27AE60;
+}
+
+/* === 展開式區塊 (details/summary) === */
+details {
+  background: #FAFAFA;
+  border: 1px solid #ECF0F1;
+  border-radius: 8px;
+  padding: 16px 22px;
+  margin: 1.5em 0;
+  transition: all 0.2s;
+}
+
+details[open] {
+  background: #FFF;
+  border-color: #E67E22;
+  box-shadow: 0 2px 8px rgba(230, 126, 34, 0.08);
+}
+
+summary.homework-toggle,
+details > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.08rem;
+  color: #2C3E50;
+  padding: 8px 0;
+  list-style: none;
+  outline: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::before {
+  content: "▸";
+  display: inline-block;
+  color: #E67E22;
+  transition: transform 0.15s;
+  font-size: 0.9em;
+}
+
+details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+summary:hover {
+  color: #E67E22;
+}
+
+/* === Page nav (prev/next) === */
+.page-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 64px 0 24px;
+  padding-top: 32px;
+  border-top: 1px solid #ECF0F1;
+}
+
+.page-nav a {
+  flex: 1;
+  padding: 16px 20px;
+  background: #FFF;
+  color: #2C3E50;
+  border: 1px solid #ECF0F1;
+  border-radius: 8px;
+  text-decoration: none;
+  border-bottom: 1px solid #ECF0F1;
+  transition: all 0.15s;
+}
+
+.page-nav a:hover {
+  border-color: #E67E22;
+  color: #E67E22;
+  transform: translateY(-1px);
+}
+
+.page-nav .label {
+  display: block;
+  font-size: 0.78em;
+  color: #95A5A6;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.page-nav .title {
+  display: block;
+  font-weight: 600;
+}
+
+.page-nav .next { text-align: right; }
+
+.page-nav .placeholder {
+  flex: 1;
+  background: transparent;
+  border: none;
+}
+
+/* === Index / 首頁 專用 === */
+.hero {
+  background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
+  color: #FFF;
+  padding: 56px 48px;
+  border-radius: 12px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 200px;
+  height: 200px;
+  background: rgba(230, 126, 34, 0.15);
+  border-radius: 50%;
+}
+
+.hero h1 {
+  color: #FFF;
+  font-size: 2.4rem;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero p {
+  color: #ECF0F1;
+  font-size: 1.1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.hero .btn {
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.btn {
+  display: inline-block;
+  padding: 13px 28px;
+  background: #E67E22;
+  color: #FFF !important;
+  text-decoration: none;
+  border-radius: 6px;
+  border: none;
+  border-bottom: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.15s;
+}
+
+.btn:hover {
+  background: #D35400;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #FFF !important;
+  border: 1px solid #FFF;
+}
+
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Learning map */
+.section-block {
+  margin: 48px 0;
+}
+
+.section-block h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.section-block h2 .duration {
+  font-size: 0.85rem;
+  color: #95A5A6;
+  font-weight: 400;
+  border-bottom: none;
+}
+
+.lesson-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 1.5em 0;
+}
+
+.lesson-card {
+  display: block;
+  background: #FFF;
+  border: 1px solid #ECF0F1;
+  border-radius: 10px;
+  padding: 18px 20px;
+  text-decoration: none;
+  color: #2C3E50;
+  transition: all 0.15s;
+  border-bottom: 1px solid #ECF0F1;
+}
+
+.lesson-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  border-color: #E67E22;
+  color: #2C3E50;
+}
+
+.lesson-card .badge {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #ECF0F1;
+  color: #7F8C8D;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 3px;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+}
+
+.lesson-card.partA .badge { background: #3498DB; color: #FFF; }
+.lesson-card.partB .badge { background: #E67E22; color: #FFF; }
+.lesson-card.appendix .badge { background: #95A5A6; color: #FFF; }
+
+.lesson-card h3 {
+  font-size: 1.05rem;
+  margin: 0 0 6px;
+}
+
+.lesson-card .desc {
+  font-size: 0.88rem;
+  color: #7F8C8D;
+  line-height: 1.55;
+}
+
+.lesson-card .meta {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: #95A5A6;
+  display: flex;
+  gap: 12px;
+}
+
+/* === Demo box (序章 用) === */
+.demo-frame {
+  background: #1B2632;
+  color: #ECF0F1;
+  border-radius: 12px;
+  padding: 32px;
+  margin: 1.5em 0;
+  border: 1px solid #2C3E50;
+}
+
+.demo-frame .terminal-line {
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 0.95em;
+  margin: 4px 0;
+}
+
+.demo-frame .user { color: #E67E22; }
+.demo-frame .claude { color: #5DADE2; }
+
+/* === 重點 callout (大字、強調) === */
+.callout {
+  font-size: 1.3rem;
+  text-align: center;
+  padding: 32px 24px;
+  background: #FFF;
+  border: 2px dashed #E67E22;
+  border-radius: 12px;
+  margin: 2em 0;
+  color: #2C3E50;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* === Footer === */
+.footer {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid #ECF0F1;
+  font-size: 0.85rem;
+  color: #95A5A6;
+}
+
+/* === Responsive === */
+@media (max-width: 900px) {
+  .site { grid-template-columns: 1fr; }
+  .sidebar {
+    position: static;
+    height: auto;
+    padding: 16px;
+    max-height: 60vh;
+  }
+  .main { padding: 24px 18px 48px; }
+  .hero { padding: 32px 24px; }
+  .hero h1 { font-size: 1.6rem; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.25rem; }
+  .lesson-grid { grid-template-columns: 1fr; }
+  .page-nav { flex-direction: column; }
+}
+
+/* === Print === */
+@media print {
+  .sidebar, .page-nav { display: none; }
+  .main { max-width: 100%; padding: 0; }
+}

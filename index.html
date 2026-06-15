@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code 入門 — 給工程師同仁</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link active" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<section class="hero">
+  <h1>給工程師同仁的 Claude Code 入門</h1>
+  <p>從第一次在終端機跟 Claude 對話,到讓它讀懂你的 codebase、遵守團隊規範、自動跑測試 — 把 Claude Code 變成日常開發流程的一部分。</p>
+  <p style="margin-top: 18px;">
+    <a class="btn" href="01-claude-code-是什麼.html">從 Chapter 1 開始 →</a>
+  </p>
+</section>
+
+<section>
+  <h2>這份教學是怎麼設計的</h2>
+  <p>每一章聚焦一個概念,搭配一個可以馬上動手的小練習。目標是讓你看完就能把 Claude Code 用在自己的專案上,而不是只停留在「知道有這個工具」。</p>
+</section>
+
+<section class="section-block">
+  <h2>章節 · Chapter <span class="duration">9 章 · 持續增加中</span></h2>
+  <div class="lesson-grid">
+
+    <a class="lesson-card partA" href="01-claude-code-是什麼.html">
+      <span class="badge">Chapter 1</span>
+      <h3>Claude Code 是什麼</h3>
+      <div class="desc">跑在終端機的 agentic coding 工具 — 跟純聊天 AI、跟 Copilot 補完差在哪,以及有哪些介面。</div>
+      <div class="meta">⏱ 5 min · 🛠 讓它自我介紹你的專案</div>
+    </a>
+
+    <a class="lesson-card partA" href="02-安裝設定.html">
+      <span class="badge">Chapter 2</span>
+      <h3>安裝設定</h3>
+      <div class="desc">一行指令裝好、cd 進專案、瀏覽器登入,認識提示列與權限模式。</div>
+      <div class="meta">⏱ 8 min · 🛠 啟動 + 讓它讀你的 repo</div>
+    </a>
+
+    <a class="lesson-card partA" href="03-claude-md.html">
+      <span class="badge">Chapter 3</span>
+      <h3>CLAUDE.md</h3>
+      <div class="desc">給 Claude 的專案常駐指示 — 用一份檔案寫下規範、慣例與守則,每次 session 自動載入。</div>
+      <div class="meta">⏱ 8 min · 🛠 寫你的第一份 CLAUDE.md</div>
+    </a>
+
+    <a class="lesson-card partA" href="04-hook.html">
+      <span class="badge">Chapter 4</span>
+      <h3>Hook</h3>
+      <div class="desc">綁在生命週期事件點、到點「一定會跑」的機制 — 跟 CLAUDE.md 的軟性建議互補的硬性保證。</div>
+      <div class="meta">⏱ 8 min · 🛠 看 Hook 必定觸發</div>
+    </a>
+
+    <a class="lesson-card partA" href="05-skill.html">
+      <span class="badge">Chapter 5</span>
+      <h3>Skill</h3>
+      <div class="desc">按需載入的「能力包」— 平常只有 description 在場,用到才把完整指示拉進來,省 context。</div>
+      <div class="meta">⏱ 8 min · 🛠 建最小 skill 看自動觸發</div>
+    </a>
+
+    <a class="lesson-card partA" href="06-slash-commands.html">
+      <span class="badge">Chapter 6</span>
+      <h3>Slash commands</h3>
+      <div class="desc">打 <code>/</code> 主動叫用 — 分內建死邏輯指令和 skill,還能用 <code>$ARGUMENTS</code> 吃參數。</div>
+      <div class="meta">⏱ 8 min · 🛠 建吃參數的自訂 command</div>
+    </a>
+
+    <a class="lesson-card partA" href="07-mcp.html">
+      <span class="badge">Chapter 7</span>
+      <h3>MCP servers</h3>
+      <div class="desc">接上外部工具的開放標準(AI 界的 USB-C)— 包一次、到處插,Claude 工作時自己挑工具。</div>
+      <div class="meta">⏱ 10 min · 🛠 接 Notion 看它自己挑工具</div>
+    </a>
+
+    <a class="lesson-card partA" href="08-subagent.html">
+      <span class="badge">Chapter 8</span>
+      <h3>Subagent</h3>
+      <div class="desc">委派出去的專門角色 — 在獨立 context 完成工作後只回報結果,還能鎖死它的工具權限。</div>
+      <div class="meta">⏱ 9 min · 🛠 建唯讀 code-reviewer</div>
+    </a>
+
+    <a class="lesson-card partA" href="09-permission-modes.html">
+      <span class="badge">Chapter 9</span>
+      <h3>權限模式</h3>
+      <div class="desc">「問你」與「放手」之間的旋鈕 — 日常四模式 <code>Shift+Tab</code> 切,加上 <code>/permissions</code> 規則。</div>
+      <div class="meta">⏱ 9 min · 🛠 同一任務感受三種模式</div>
+    </a>
+
+  </div>
+</section>
+
+<div class="footer">
+  <p>內部教學使用 · 維護者:chris</p>
+</div>
+
+</main>
+</div>
+</body>
+</html>
