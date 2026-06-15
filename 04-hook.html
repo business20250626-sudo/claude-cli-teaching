@@ -115,6 +115,47 @@
   </tr>
 </table>
 
+<h2>可能的使用情境</h2>
+
+<p>用「<strong>你最希望它每次都做的事</strong>」來想最有共鳴。這些寫在 CLAUDE.md 可能被忘記,寫成 hook 就是<strong>每次必跑</strong>:</p>
+
+<table>
+  <tr><th>你的擔憂 / 期望</th><th>hook 怎麼幫你</th><th>事件 + matcher → handler</th></tr>
+  <tr>
+    <td>「怕它<strong>說『好了』其實根本沒驗證</strong>」</td>
+    <td>改完檔自動跑測試 / type check,壞了把錯誤回報給它當場修</td>
+    <td><code>PostToolUse</code> + <code>Edit|Write</code> → <code>command</code></td>
+  </tr>
+  <tr>
+    <td>「跑很久,<strong>我跑去做別的事會錯過</strong>」</td>
+    <td>完成一輪就<strong>叮一聲 / 發通知</strong>到 Slack,不用一直盯著</td>
+    <td><code>Stop</code> → <code>command</code> 或 <code>http</code></td>
+  </tr>
+  <tr>
+    <td>「想<strong>知道它到底對我專案做了什麼</strong>」</td>
+    <td>把每個執行過的指令記進一份 audit log,事後可追</td>
+    <td><code>PostToolUse</code> + <code>Bash</code> → <code>command</code></td>
+  </tr>
+  <tr>
+    <td>「希望<strong>一開工就有完整背景</strong>」</td>
+    <td>session 開場自動報告專案當前進度、今天待辦事項等等</td>
+    <td><code>SessionStart</code> → <code>command</code></td>
+  </tr>
+  <tr>
+    <td>「怕它<strong>手滑跑出毀滅性指令的各種變形</strong>」</td>
+    <td>執行前可靠擋下 <code>git push -f</code> / <code>--force-with-lease</code> / <code>+main</code> 等所有寫法(本章小練習)</td>
+    <td><code>PreToolUse</code> + <code>Bash</code> → <code>command</code></td>
+  </tr>
+</table>
+
+<div class="box box-warning">
+  <div class="box-title">⚠️ 等等,擋危險指令不是 <code>/permissions</code> 的事嗎?</div>
+  <p>對,<strong>擋固定指令、擋讀某個檔(<code>.env</code>)這種,用 <code>/permissions</code> 的 deny 規則就好</strong>(Chapter 9),不必動用 hook。那為什麼最後一列還用 hook 擋 force push?</p>
+  <p>因為 permission 規則是<strong>字串比對,防不了變形規避</strong> —— 官方自己警告 Bash 參數規則「很脆弱」。你寫 <code>deny: Bash(git push --force *)</code>,擋得住這個拼法,卻擋不住 <code>git push -f</code>、<code>--force-with-lease</code>、<code>git push origin +main</code>、用變數繞過⋯ hook 是<strong>程式</strong>,能解析、正規化指令,把所有變形都收斂成「這在 force push」一律擋。<strong>高風險、又有多種寫法</strong>的東西,才值得從規則升級成 hook。</p>
+</div>
+
+<p>看出規律了嗎:hook 的獨特價值在兩種情況 —— <strong>(1) 根本不是「擋/放」,而是反應</strong>(跑測試、通知、記錄、注入 context);<strong>(2) 要可靠擋掉某「類」東西、防變形規避</strong>,規則的字串比對不夠力。只是「擋固定 pattern」用 <code>/permissions</code> 規則更省事。</p>
+
 <hr>
 
 <div class="box box-exercise">
