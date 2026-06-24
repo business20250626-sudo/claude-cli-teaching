@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 10 · 工作流 skill 集 — Claude Code 入門</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="site">
+
+<aside class="sidebar">
+  <a class="sidebar-brand" href="index.html">
+    Claude Code 入門
+    <small>給工程師同仁</small>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">開始</div>
+    <a class="sidebar-link" href="index.html">首頁</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">章節 · Chapter</div>
+    <a class="sidebar-link" href="01-claude-code-是什麼.html"><span class="num">1</span>Claude Code 是什麼</a>
+    <a class="sidebar-link" href="02-安裝設定.html"><span class="num">2</span>安裝設定</a>
+    <a class="sidebar-link" href="03-claude-md.html"><span class="num">3</span>CLAUDE.md</a>
+    <a class="sidebar-link" href="04-hook.html"><span class="num">4</span>Hook</a>
+    <a class="sidebar-link" href="05-skill.html"><span class="num">5</span>Skill</a>
+    <a class="sidebar-link" href="06-slash-commands.html"><span class="num">6</span>Slash commands</a>
+    <a class="sidebar-link" href="07-mcp.html"><span class="num">7</span>MCP servers</a>
+    <a class="sidebar-link" href="08-subagent.html"><span class="num">8</span>Subagent</a>
+    <a class="sidebar-link" href="09-permission-modes.html"><span class="num">9</span>權限模式</a>
+    <a class="sidebar-link active" href="10-skill-工作流集.html"><span class="num">10</span>工作流 skill 集</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<h1>
+  <span class="chapter-label">Chapter 10</span>
+  兩套工作流 skill 集 — superpowers vs mattpocock/skills
+</h1>
+
+<p style="color:#7F8C8D;">⏱ 預估 13 分鐘讀完,加上小練習共 30 分鐘</p>
+
+<div class="box box-concept">
+  <div class="box-title">💡 一句話講完</div>
+  <p><strong>不必從零寫</strong> — 社群已經把成套的工作流打包好。這章挑兩套最具代表性、理念又剛好相反的:<strong>obra/superpowers 是一條<u>強制的端到端開發流水線</u></strong>(管你「怎麼做事」);<strong>mattpocock/skills 是一組<u>分類好、挑著用的工作流工具箱</u></strong>(給你「某個時刻該出的招」)。</p>
+</div>
+
+<h2>為什麼要看這個:從「自己寫 skill」到「用工作流 skill 集」</h2>
+
+<p>成熟的工作流(完整的 TDD 循環、code review 流程、把對話變成 issue…)往往要寫好幾個互相搭配的 skill、還要反覆打磨。與其從零開始,<strong>直接裝一套別人調校好的 skill 集</strong>通常更划算。</p>
+
+<p>市面上的 skill 集很多,這章挑這兩套,是因為它們的<strong>設計哲學剛好站在對立面</strong> —— 看懂它們的差異,你就抓得到「工作流 skill 集」這一整類東西的兩條典型路線,也知道自己的情境該裝哪個。</p>
+
+<h2>兩種思考哲學:它們在「防」的東西剛好相反</h2>
+
+<p>這兩套其實在回應<strong>同一個 AI 時代的問題</strong>:AI 讓你<strong>產出 code 的速度,遠超過你能驗證它對不對、或維持它協調的速度</strong>。但它們選擇<strong>防的失敗模式剛好相反</strong> —— 一個防「執行不可靠」,一個防「方向錯、設計爛掉」。先抓住這層世界觀,再看各自的 skill 設計就會覺得「合理、各有取捨」。</p>
+
+<div class="box box-concept">
+  <div class="box-title">📋 抓重心:完整照走 vs 前重後輕</div>
+  <p><strong>superpowers 把流程寫得很完整,你照著走就好</strong> —— 每一步都規定好(brainstorm → plan → TDD → review → verify),好處是<strong>不容易走歪</strong>、代價是儀式偏重。<strong>mattpocock 整體沒那麼「一條龍」,重心擺在前面</strong>:把<strong>定義與對齊</strong>做得很講究(grilling 逼問、PRD、垂直 issue、ADR),但<strong>後面怎麼執行就放手讓你自由發揮</strong> —— 挑哪個 skill、怎麼接,你決定。</p>
+</div>
+
+<h3>superpowers 的世界觀:不信任 agent,所以上鐵軌</h3>
+<ul>
+  <li><strong>想解決的問題</strong>:agent(和人)最危險的傾向是<strong>「猜」</strong> —— 跳到一個聽起來很對、其實沒驗證過的答案,然後宣稱完成。</li>
+  <li><strong>解決方法</strong>:把紀律寫成<strong>繞不過去的鐵軌</strong>。<code>using-superpowers</code> 那句「1% 機率適用就絕對必須叫用」就是個 forcing function —— 不寄望 agent 自律,直接上鎖。它的口號也很直白(repo 原話):<em>"Process over guessing"</em>(別用猜的)、<em>"Write tests first, always"</em>(測試永遠先寫)、<em>"Verify before declaring success"</em>(有證據才算完成),並持續 <em>"complexity reduction"</em>(簡化)。</li>
+</ul>
+
+
+<table>
+  <tr><th>skill名稱</th><th>實際會做的事</th></tr>
+  <tr>
+    <td><strong>using-superpowers</strong></td>
+    <td><strong>入口 skill,開場 hook 自動載入,逼 Claude 每次任務前先找適用的 skill 再動作</strong></td>
+  </tr>
+  <tr>
+    <td><strong>brainstorming</strong></td>
+    <td><strong>確認專案脈絡 -> 專案內容詢問 -> 生成spec</strong></td>
+  </tr>
+  <tr>
+    <td><strong>writing-plans</strong></td>
+    <td><strong>生成plan(包括未驗證過程式碼的生成)</strong></td>
+  </tr>
+  <tr>
+    <td><strong>subagent-driven-development</strong></td>
+    <td><strong>主agent會去讀剛剛的plan,使用不同的agent去做如下skill: using-git-worktrees -> test-driven-development -> requesting-code-review -> finishing-a-development-branch</strong></td>
+  </tr>
+  <tr>
+    <td><strong>using-git-worktrees</strong></td>
+    <td><strong>開一個獨立的工作空間</strong></td>
+  </tr>
+  <tr>
+    <td><strong>test-driven-development</strong></td>
+    <td><strong>先做TDD,才進行程式碼的生成,詳細的檔案會記錄在.superpowers/sdd底下task開頭的檔案</strong></td>
+  </tr>
+  <tr>
+    <td><strong>requesting-code-review</strong></td>
+    <td><strong>code review,詳細的檔案會記錄在.superpowers/sdd底下review開頭的檔案</strong></td>
+  </tr>
+  <tr>
+    <td><strong>receiving-code-review</strong></td>
+    <td><strong>收到 review 意見後,先技術驗證再決定採不採納,不無腦同意(不討好)</strong></td>
+  </tr>
+  <tr>
+    <td><strong>systematic-debugging</strong></td>
+    <td><strong>遇到 bug / 測試失敗,先系統化找根因再動手,不亂猜</strong></td>
+  </tr>
+  <tr>
+    <td><strong>verification-before-completion</strong></td>
+    <td><strong>宣稱完成前一定要實際跑驗證、拿出證據,不能只說「應該沒問題」</strong></td>
+  </tr>
+  <tr>
+    <td><strong>finishing-a-development-branch</strong></td>
+    <td><strong>確認驗證狀態後分支合併</strong></td>
+  </tr>
+  <tr>
+    <td><strong>writing-skills</strong></td>
+    <td><strong>寫 / 改你自己的 skill(含驗證 skill 好不好用)</strong></td>
+  </tr>
+</table>
+
+
+
+<div class="box box-exercise">
+  <div class="box-title">🛠 小練習:superpower實作待辦清單</div>
+
+  <h4>步驟</h4>
+  <ol>
+    <li>裝superpower
+      <pre><code># superpowers
+/plugin install superpowers@claude-plugins-official</code></pre>
+    </li>
+    <li>跑 superpowers 的招牌(自動一條龍),當輸入需求時會自動使用<strong>/brainstorming</strong>,這邊會開始問相關問題,選擇<strong>web介面、不能不產生spec
+    </strong>其他盡量簡單就好
+    <pre><code>做一個待辦清單,只需要讓使用者可以新增待辦及標成完成,使用go來做。</code></pre>
+    最後會在專案下的docs/superpowers/specs生成一個剛剛討論的md檔
+    </li>
+    <li>主動詢問實作計畫,使用<strong>/writing-plans</strong>,同意後會在專案下的docs/superpowers/plans生成一個計劃的md檔</li>
+    <li>根據任務選擇是否需要subagent,大致上都會使用<strong>/subagent-driven-development</strong></li>
+    <li>使用using-git-worktrees產生新工作目錄</li>
+    <li>開始自己做task,不斷地循環TDD->code->review直到所有task都做完,會使用到<strong>/test-driven-development</strong>、<strong>/requesting-code-review</strong></li>
+    <li>可以去檢查.superpowers/sdd底下是否有一些文檔,這邊會呼應到他初衷,<strong>必須要有證據,不能只是說說而已</strong></li>
+    <li>全部task結束,準備合併分支</li>  
+  </ol>
+
+  <h4>練習目的</h4>
+  <ul>
+    <li>了解superpower的整體開發流程</li>
+  </ul>
+</div>
+
+
+
+
+
+<h3>mattpocock 的世界觀:信任人,給他的判斷裝槓桿</h3>
+<ul>
+  <li><strong>想解決的問題</strong>:<strong>沒對齊</strong>(<em>"No-one knows exactly what they want"</em>)和<strong>設計腐敗</strong>。寫 code 不難,難在知道要做什麼、以及隨時間保持系統可理解。</li>
+  <li><strong>解決方法</strong>:不上鎖,而是給你<strong>在對的時刻主動叫的鋒利工具</strong> —— 逼問(grilling)釘死需求、<code>domain-modeling</code> 建<strong>共用語彙</strong>、<code>CONTEXT.md</code> / ADR 記住決策。agent 是要「對齊」的協作者,不是要「上鎖」的對象。</li>
+</ul>
+
+<table>
+  <tr><th>skill名稱</th><th>實際會做的事</th></tr>
+  <tr>
+    <td><strong>ask-matt</strong></td>
+    <td><strong>路由器:不確定該用哪個時,問它「這情況適合哪個 skill / flow」</strong></td>
+  </tr>
+  <tr>
+    <td><strong>setup-matt-pocock-skills</strong></td>
+    <td><strong>專案當案基礎設定</strong></td>
+  </tr>
+  <tr>
+    <td><strong>grill-with-docs</strong></td>
+    <td><strong>確認專案脈絡 -> 專案內容詢問 ->生成CONTEXT.md及adr相關文件</strong></td>
+  </tr>
+  <tr>
+    <td><strong>domain-modeling</strong></td>
+    <td><strong>持續打磨領域模型:挑戰用詞、用情境壓力測試,就地更新 CONTEXT.md 與 ADR</strong></td>
+  </tr>
+  <tr>
+    <td><strong>prototype</strong></td>
+    <td><strong>決策上的疑問就可以先實際跑看看,可與grill-with-docs搭配使用</strong></td>
+  </tr>
+  <tr>
+    <td><strong>to-prd</strong></td>
+    <td><strong>生成PRD,內容包括標題、Problem Statement(问题陈述)、Solution(解决方案)、User Stories:需求清单(角色+想要+好处)」,——它穷举需求,供下游切片时逐条对应、Implementation Decisions(实作决策)、Testing Decisions(测试决策)、Out of Scope(范围之外) —— 记这次明确「不做」的东西。这栏看似不重要,其实很关键:它防止后面接手的 AFK agent gold-plating(自作主张多做)</strong></td>
+  </tr>
+  <tr>
+    <td><strong>To-issue</strong></td>
+    <td><strong>生成多個issue,核心是垂直切片</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Implement</strong></td>
+    <td><strong>會執行到TDD、code、review
+    </strong></td>
+  </tr>
+  <tr>
+    <td><strong>tdd</strong></td>
+    <td><strong>紅綠重構迴圈,一次一個垂直切片(implement 會叫到)</strong></td>
+  </tr>
+  <tr>
+    <td><strong>review</strong></td>
+    <td><strong>雙軸 review:Spec(符不符合 issue/PRD)＋ Standards(合不合規範),平行 subagent 跑(⚠️ 仍 in-progress)</strong></td>
+  </tr>
+  <tr>
+    <td><strong>diagnosing-bugs</strong></td>
+    <td><strong>硬 bug / 效能退化的診斷迴圈:reproduce → minimise → hypothesise → instrument → fix → regression-test</strong></td>
+  </tr>
+  <tr>
+    <td><strong>triage</strong></td>
+    <td><strong>用狀態機把 issue 在各 triage 角色間流轉</strong></td>
+  </tr>
+  <tr>
+    <td><strong>handoff</strong></td>
+    <td><strong>把當前對話壓縮成交接文件,讓另一個 agent 接手</strong></td>
+  </tr>
+  <tr>
+    <td><strong>improve-codebase-architecture</strong></td>
+    <td><strong>掃描 codebase 找可加深的設計機會,出 HTML 報告,再 grill 你選的那個</strong></td>
+  </tr>
+</table>
+
+
+
+<div class="box box-exercise">
+  <div class="box-title">🛠 mattpocock小練習:實作待辦清單</div>
+
+  <h4>步驟</h4>
+  <ol>
+    <li>裝mattpocock,帶參數--all會直接全部skill下載,如果想要特定幾個就不要加自己選
+      <pre><code># mattpocock
+npx skills@latest add mattpocock/skills -a claude-code --copy -y -all</code></pre>
+    </li>
+    <li>主動使用<strong>/setup-matt-pocock-skills</strong>,選擇檔案存放方式
+    <pre><code>/setup-matt-pocock-skills</code></pre></li>
+    <li>主動使用<strong>/grill-with-docs</strong>,這邊會開始問相關問題,選擇<strong>web介面
+    </strong>其他盡量簡單就好
+    <pre><code>/grill-with-docs 做一個待辦清單,只需要讓使用者可以新增待辦及標成完成,使用go來做。</code></pre>
+    最後會在剛剛指定的地方生成檔案,我這邊是專案下的docs/adr/生成一個剛剛討論的md檔及專案根目錄的CONTEXT.md
+    </li>
+    <li>主動使用/to-prd<pre><code>/to-prd</code></pre>
+    本地會在.scratch下生成PRD.md
+    </li>
+<li>主動使用/to-issue<pre><code>/to-issue</code></pre>
+    本地會在.scratch/issues/下生成md檔
+    </li>
+<li>主動使用/implement,不斷地循環TDD->code->review直到所有issue都做完,會使用到這邊會用到<strong>/tdd、/review兩個skill</strong><pre><code>/implement 執行並review每個issue</code></pre></li>
+    <li>全部issue結束,準備合併分支</li>  
+  </ol>
+
+  <h4>練習目的</h4>
+  <ul>
+    <li>了解mattpocock的整體開發流程</li>
+  </ul>
+</div>
+
+
+
+<h2>流程列出來幾乎一樣 —— 那細節差在哪?</h2>
+
+<p>把兩套的階段攤開,你會發現它們<strong>幾乎一對一</strong>:都先對齊 → 規劃 → 切片 → TDD → review → 驗證 → 收尾。所以真正的差別<strong>不在「有哪些步驟」,而在每一步<u>怎麼被執行、產出什麼、誰在驅動</u></strong>。歸成以下維度:</p>
+
+<table>
+  <tr><th>維度</th><th>superpowers</th><th>mattpocock/skills</th></tr>
+  <tr>
+    <td><strong>誰驅動流程</strong></td>
+    <td><strong>流程驅動你</strong>:skill 自動觸發、強制(1% 原則 + 開場 hook);你核准設計後,大多在「<strong>看它跑</strong>」</td>
+    <td><strong>你驅動流程</strong>:多是 <code>/</code> 指令,你在對的時刻<strong>主動叫</strong>;<strong>全程由你決定</strong></td>
+  </tr>
+  <tr>
+    <td><strong>記憶留多久</strong></td>
+    <td><strong>即拋</strong>:活在這次的 plan 檔,任務結束就散</td>
+    <td><strong>累積</strong>:決策寫進 <code>CONTEXT.md</code> / ADR,跨天、跨任務疊加</td>
+  </tr>
+  <tr>
+    <td><strong>品質從哪來</strong></td>
+    <td><strong>流程紀律 + 驗證證據</strong>(機械、可重複):TDD、<code>verification-before-completion</code>、不討好的 code review</td>
+    <td><strong>對齊 + 設計 + 共用語彙</strong>(靠判斷、人在迴圈):grilling、<code>domain-modeling</code>、每天投資設計</td>
+  </tr>
+</table>
+
+<p>所以「流程很像」是表象;<strong>真正的分水嶺是 ①</strong> —— 一套把紀律變成你<strong>逃不掉的軌道</strong>,一套把能力變成你<strong>隨手取用的工具</strong>。②③④ 其實都從 ① 長出來:被流程推著走,記憶就只需活到任務結束;自己開車,就得把決策留在 <code>CONTEXT.md</code> 裡、下次才接得上。下面兩節分別細看兩套的招式。</p>
+
+<h2>你的情況 → 選哪個(可以兩套並用)</h2>
+
+<table>
+  <tr><th>你的情況 / 需求</th><th>選</th><th>為什麼(對應差異 / skill)</th></tr>
+  <tr>
+    <td>想強制「每個任務都先想、先測、先驗」的工程紀律</td>
+    <td><strong>superpowers</strong></td>
+    <td>forcing function,紀律逃不掉(誰驅動)</td>
+  </tr>
+  <tr>
+    <td>要 AI 宣稱完成前<strong>先跑驗證、拿出證據</strong></td>
+    <td><strong>superpowers</strong></td>
+    <td><code>verification-before-completion</code>(品質)</td>
+  </tr>
+  <tr>
+    <td>想在<strong>多個 AI 工具</strong>(Codex / Cursor / Gemini)用同一套方法</td>
+    <td><strong>superpowers</strong></td>
+    <td>明確跨平台</td>
+  </tr>
+  <tr>
+    <td>要把討論變成 <strong>issue / PRD</strong>、接上團隊 issue tracker</td>
+    <td><strong>mattpocock</strong></td>
+    <td><code>to-issues</code> / <code>to-prd</code> / <code>triage</code></td>
+  </tr>
+  <tr>
+    <td>想<strong>累積專案決策記憶</strong>(CONTEXT.md / ADR)、跨天接得上</td>
+    <td><strong>mattpocock</strong></td>
+    <td><code>domain-modeling</code> / <code>handoff</code>(記憶)</td>
+  </tr>
+  <tr>
+    <td>只想用「<strong>某一招</strong>」(如只把對話變 issue),不想被整套綁</td>
+    <td><strong>mattpocock</strong></td>
+    <td>自助餐、挑著用(誰驅動)</td>
+  </tr>
+  <tr>
+    <td><strong>既要</strong>強制紀律,<strong>又要</strong>團隊產物與長期記憶</td>
+    <td><strong>兩套並用</strong></td>
+    <td>superpowers 當底層紀律 + mattpocock 的 <code>/to-issues</code>、<code>/grill-with-docs</code></td>
+  </tr>
+</table>
+
+<h3>作家的小murmur</h3>
+<ul>
+  <li>matt的<strong>grill-with-docs</strong>個人覺得非常好用,詢問較深,且會生成出專案共用詞彙及架構討論等等檔案,有利於未來專案的運作</li>
+  <li>matt的<strong>to-issue</strong>使用的是垂直切割,可以在每個issue內都能寫一條端到端的測試</li>
+  <li>推薦的兩個都沒有做到整合測試的部分,可以使用claude內建的/verify來完成這部分</li>
+  <li>兩個方法其實都不錯可以混著用,也可以透過改寫skill來做到對方沒有做的事情</li>
+</ul>
+
+
+
+<div class="page-nav">
+  <a href="09-permission-modes.html">
+    <span class="label">← 上一章</span>
+    <span class="title">Chapter 9 · 權限模式</span>
+  </a>
+  <a href="#" class="next" style="opacity:.5; pointer-events:none;">
+    <span class="label">下一章 →</span>
+    <span class="title">規劃中</span>
+  </a>
+</div>
+
+</main>
+</div>
+</body>
+</html>
